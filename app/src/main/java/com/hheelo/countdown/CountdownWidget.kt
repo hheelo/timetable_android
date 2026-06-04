@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -15,6 +16,7 @@ import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -39,16 +41,28 @@ class CountdownWidgetReceiver : GlanceAppWidgetReceiver() {
 }
 
 class CountdownWidget : GlanceAppWidget() {
+    override val sizeMode: SizeMode = SizeMode.Responsive(
+        setOf(
+            DpSize(160.dp, 110.dp),
+            DpSize(220.dp, 110.dp),
+            DpSize(300.dp, 110.dp),
+            DpSize(220.dp, 220.dp),
+            DpSize(300.dp, 220.dp),
+            DpSize(360.dp, 260.dp)
+        )
+    )
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val store = CountdownStore(context)
         val snapshot = CountdownCalculator.makeSnapshot(store)
         provideContent {
             val size = LocalSize.current
-            if (size.width < 220.dp) {
+            val maxCards = visibleCardCount(size)
+            if (maxCards == 1) {
                 val featured = snapshot.cards.minByOrNull { it.days } ?: snapshot.cards.first()
                 SmallWidget(featured)
             } else {
-                OverviewWidget(snapshot.cards, maxCards = if (size.height > 220.dp) 6 else 3)
+                OverviewWidget(snapshot.cards, maxCards)
             }
         }
     }
@@ -85,25 +99,34 @@ private fun SmallWidget(card: CountdownCard) {
 
 @Composable
 private fun OverviewWidget(cards: List<CountdownCard>, maxCards: Int) {
+    val columns = columnsFor(maxCards)
+    val cardHeight = if (maxCards <= 3) 118.dp else 104.dp
+    val cardWidth = when (columns) {
+        2 -> 96.dp
+        else -> 88.dp
+    }
+
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(ColorProvider(parseWidgetColor("#111827")))
-            .padding(14.dp)
+            .padding(if (maxCards <= 2) 12.dp else 14.dp)
     ) {
-        Text(
-            text = "倒计时总览",
-            style = TextStyle(color = ColorProvider(parseWidgetColor("#EBFFFFFF")), fontSize = 15.sp, fontWeight = FontWeight.Medium)
-        )
-        Spacer(GlanceModifier.height(10.dp))
+        if (maxCards > 2) {
+            Text(
+                text = "倒计时总览",
+                style = TextStyle(color = ColorProvider(parseWidgetColor("#EBFFFFFF")), fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            )
+            Spacer(GlanceModifier.height(10.dp))
+        }
 
-        cards.take(maxCards).chunked(3).forEach { rowCards ->
+        cards.take(maxCards).chunked(columns).forEach { rowCards ->
             Row(
                 modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Vertical.CenterVertically
             ) {
                 rowCards.forEach { card ->
-                    WidgetCard(card, modifier = GlanceModifier.width(92.dp).height(if (maxCards > 3) 116.dp else 132.dp))
+                    WidgetCard(card, modifier = GlanceModifier.width(cardWidth).height(cardHeight))
                     Spacer(GlanceModifier.width(8.dp))
                 }
             }
@@ -158,6 +181,24 @@ private fun iconResource(name: String): Int {
         "pin" -> R.drawable.ic_widget_pin
         "holiday" -> R.drawable.ic_widget_holiday
         else -> R.drawable.ic_widget_calendar
+    }
+}
+
+private fun visibleCardCount(size: DpSize): Int {
+    return when {
+        size.width < 200.dp -> 1
+        size.height < 180.dp && size.width < 280.dp -> 2
+        size.height < 180.dp -> 3
+        size.width < 280.dp -> 4
+        else -> 6
+    }
+}
+
+private fun columnsFor(maxCards: Int): Int {
+    return when {
+        maxCards <= 2 -> 2
+        maxCards == 4 -> 2
+        else -> 3
     }
 }
 
