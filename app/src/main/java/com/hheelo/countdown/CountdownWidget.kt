@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,7 +25,6 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
-import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
@@ -46,9 +46,19 @@ class CountdownWidget : GlanceAppWidget() {
             DpSize(160.dp, 110.dp),
             DpSize(220.dp, 110.dp),
             DpSize(300.dp, 110.dp),
+            DpSize(360.dp, 110.dp),
+            DpSize(480.dp, 110.dp),
+            DpSize(640.dp, 110.dp),
             DpSize(220.dp, 220.dp),
             DpSize(300.dp, 220.dp),
-            DpSize(360.dp, 260.dp)
+            DpSize(360.dp, 260.dp),
+            DpSize(480.dp, 260.dp),
+            DpSize(640.dp, 260.dp),
+            DpSize(220.dp, 340.dp),
+            DpSize(300.dp, 340.dp),
+            DpSize(360.dp, 360.dp),
+            DpSize(480.dp, 360.dp),
+            DpSize(640.dp, 360.dp)
         )
     )
 
@@ -60,21 +70,29 @@ class CountdownWidget : GlanceAppWidget() {
             val maxCards = visibleCardCount(size)
             if (maxCards == 1) {
                 val featured = snapshot.cards.minByOrNull { it.days } ?: snapshot.cards.first()
-                SmallWidget(featured)
+                SmallWidget(featured, size)
             } else {
-                OverviewWidget(snapshot.cards, maxCards)
+                OverviewWidget(snapshot.cards, maxCards, size)
             }
         }
     }
 }
 
 @Composable
-private fun SmallWidget(card: CountdownCard) {
+private fun SmallWidget(card: CountdownCard, size: DpSize) {
+    val compact = size.height < 140.dp
+    val padding = if (compact) 12.dp else 16.dp
+    val topSpacer = when {
+        size.height < 130.dp -> 10.dp
+        size.height < 180.dp -> 20.dp
+        else -> 32.dp
+    }
+
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(ColorProvider(parseWidgetColor("#111827")))
-            .padding(16.dp)
+            .padding(padding)
             .clickable(actionStartActivity(deepLinkIntent(card.deepLink))),
         verticalAlignment = Alignment.Vertical.Top,
         horizontalAlignment = Alignment.Horizontal.Start
@@ -84,87 +102,109 @@ private fun SmallWidget(card: CountdownCard) {
             style = TextStyle(color = ColorProvider(parseWidgetColor(card.tintHex)), fontSize = 13.sp, fontWeight = FontWeight.Medium),
             maxLines = 1
         )
-        Spacer(GlanceModifier.height(32.dp))
+        Spacer(GlanceModifier.height(topSpacer))
         Text(
             text = card.days.toString(),
-            style = TextStyle(color = ColorProvider(Color.White), fontSize = 40.sp, fontWeight = FontWeight.Bold)
+            style = TextStyle(color = ColorProvider(Color.White), fontSize = if (compact) 34.sp else 40.sp, fontWeight = FontWeight.Bold)
         )
         Text(
             text = card.subtitle,
             style = TextStyle(color = ColorProvider(parseWidgetColor("#B8FFFFFF")), fontSize = 11.sp),
-            maxLines = 2
+            maxLines = if (compact) 1 else 2
         )
     }
 }
 
 @Composable
-private fun OverviewWidget(cards: List<CountdownCard>, maxCards: Int) {
-    val columns = columnsFor(maxCards)
-    val cardHeight = if (maxCards <= 3) 118.dp else 104.dp
-    val cardWidth = when (columns) {
-        2 -> 96.dp
-        else -> 88.dp
-    }
+private fun OverviewWidget(cards: List<CountdownCard>, maxCards: Int, size: DpSize) {
+    val visibleCards = cards.take(maxCards)
+    val columns = columnsFor(size.width).coerceAtMost(maxCards)
+    val rows = rowCount(visibleCards.size, columns)
+    val padding = overviewPadding(size)
+    val cardGap = 8.dp
+    val contentWidth = size.width.value - padding.value * 2
+    val contentHeight = size.height.value - padding.value * 2
+    val cardWidth = ((contentWidth - cardGap.value * (columns - 1)) / columns).coerceAtLeast(74f).dp
+    val cardHeight = ((contentHeight - cardGap.value * (rows - 1)) / rows).coerceAtLeast(80f).dp
 
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(ColorProvider(parseWidgetColor("#111827")))
-            .padding(if (maxCards <= 2) 12.dp else 14.dp)
+            .padding(padding)
     ) {
-        if (maxCards > 2) {
-            Text(
-                text = "倒计时总览",
-                style = TextStyle(color = ColorProvider(parseWidgetColor("#EBFFFFFF")), fontSize = 15.sp, fontWeight = FontWeight.Medium)
-            )
-            Spacer(GlanceModifier.height(10.dp))
-        }
-
-        cards.take(maxCards).chunked(columns).forEach { rowCards ->
+        visibleCards.chunked(columns).forEachIndexed { rowIndex, rowCards ->
             Row(
                 modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Vertical.CenterVertically
             ) {
-                rowCards.forEach { card ->
-                    WidgetCard(card, modifier = GlanceModifier.width(cardWidth).height(cardHeight))
-                    Spacer(GlanceModifier.width(8.dp))
+                rowCards.forEachIndexed { index, card ->
+                    WidgetCard(
+                        card = card,
+                        cardWidth = cardWidth,
+                        cardHeight = cardHeight,
+                        modifier = GlanceModifier.width(cardWidth).height(cardHeight)
+                    )
+                    if (index < rowCards.lastIndex) {
+                        Spacer(GlanceModifier.width(cardGap))
+                    }
                 }
             }
-            Spacer(GlanceModifier.height(8.dp))
+            if (rowIndex < rows - 1) {
+                Spacer(GlanceModifier.height(cardGap))
+            }
         }
     }
 }
 
 @Composable
-private fun WidgetCard(card: CountdownCard, modifier: GlanceModifier = GlanceModifier) {
+private fun WidgetCard(
+    card: CountdownCard,
+    cardWidth: Dp,
+    cardHeight: Dp,
+    modifier: GlanceModifier = GlanceModifier
+) {
+    val compact = cardHeight < 104.dp
+    val spacious = cardHeight >= 124.dp
+    val titleLines = if (cardWidth >= 108.dp || spacious) 2 else 1
+    val subtitleLines = when {
+        cardHeight >= 122.dp -> 2
+        cardHeight >= 104.dp -> 1
+        else -> 0
+    }
+
     Column(
         modifier = modifier
             .background(ColorProvider(parseWidgetColor("#14FFFFFF")))
-            .padding(10.dp)
+            .padding(if (compact) 8.dp else 10.dp)
             .clickable(actionStartActivity(deepLinkIntent(card.deepLink))),
         verticalAlignment = Alignment.Vertical.Top
     ) {
-        Image(
-            provider = ImageProvider(iconResource(card.iconName)),
-            contentDescription = null,
-            modifier = GlanceModifier.size(18.dp),
-            colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(parseWidgetColor(card.tintHex)))
-        )
-        Spacer(GlanceModifier.height(6.dp))
+        if (!compact) {
+            Image(
+                provider = ImageProvider(iconResource(card.iconName)),
+                contentDescription = null,
+                modifier = GlanceModifier.size(18.dp),
+                colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(parseWidgetColor(card.tintHex)))
+            )
+            Spacer(GlanceModifier.height(6.dp))
+        }
         Text(
             text = card.title,
-            style = TextStyle(color = ColorProvider(parseWidgetColor("#E6FFFFFF")), fontSize = 12.sp, fontWeight = FontWeight.Medium),
-            maxLines = 1
+            style = TextStyle(color = ColorProvider(parseWidgetColor("#E6FFFFFF")), fontSize = if (compact) 11.sp else 12.sp, fontWeight = FontWeight.Medium),
+            maxLines = titleLines
         )
         Text(
             text = card.days.toString(),
-            style = TextStyle(color = ColorProvider(Color.White), fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            style = TextStyle(color = ColorProvider(Color.White), fontSize = if (compact) 24.sp else 28.sp, fontWeight = FontWeight.Bold)
         )
-        Text(
-            text = card.subtitle,
-            style = TextStyle(color = ColorProvider(parseWidgetColor("#9EFFFFFF")), fontSize = 10.sp),
-            maxLines = 2
-        )
+        if (subtitleLines > 0) {
+            Text(
+                text = card.subtitle,
+                style = TextStyle(color = ColorProvider(parseWidgetColor("#9EFFFFFF")), fontSize = 10.sp),
+                maxLines = subtitleLines
+            )
+        }
     }
 }
 
@@ -185,21 +225,33 @@ private fun iconResource(name: String): Int {
 }
 
 private fun visibleCardCount(size: DpSize): Int {
+    if (size.width < 200.dp) return 1
+
+    val columns = columnsFor(size.width)
+    val padding = overviewPadding(size)
+    val cardGap = 8.dp
+    val availableHeight = size.height.value - padding.value * 2
+    val minimumCardHeight = if (size.height < 180.dp) 82f else 112f
+    val rowsThatFit = ((availableHeight + cardGap.value) / (minimumCardHeight + cardGap.value)).toInt()
+    val maxRows = ((6 + columns - 1) / columns).coerceAtLeast(1)
+    val rows = rowsThatFit.coerceIn(1, maxRows)
+    return (columns * rows).coerceIn(2, 6)
+}
+
+private fun columnsFor(width: Dp): Int {
     return when {
-        size.width < 200.dp -> 1
-        size.height < 180.dp && size.width < 280.dp -> 2
-        size.height < 180.dp -> 3
-        size.width < 280.dp -> 4
-        else -> 6
+        width < 280.dp -> 2
+        width < 560.dp -> 3
+        else -> 4
     }
 }
 
-private fun columnsFor(maxCards: Int): Int {
-    return when {
-        maxCards <= 2 -> 2
-        maxCards == 4 -> 2
-        else -> 3
-    }
+private fun rowCount(itemCount: Int, columns: Int): Int {
+    return (itemCount + columns - 1) / columns
+}
+
+private fun overviewPadding(size: DpSize): Dp {
+    return if (size.height < 180.dp || size.width < 260.dp) 12.dp else 14.dp
 }
 
 private fun parseWidgetColor(hex: String): Color {
