@@ -9,7 +9,7 @@ data class CountdownEvent(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
     val targetDate: String,
-    val colorHex: String = "#FF6B4A",
+    val colorHex: String = CountdownColorHex.Brand,
     val isPinned: Boolean = false,
     val sortOrder: Int = 0
 ) {

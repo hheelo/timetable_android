@@ -91,7 +91,7 @@ private fun SmallWidget(card: CountdownCard, size: DpSize) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(parseWidgetColor("#111827")))
+            .background(ColorProvider(countdownColor(CountdownColorHex.WidgetBackground)))
             .padding(padding)
             .clickable(actionStartActivity(deepLinkIntent(card.deepLink))),
         verticalAlignment = Alignment.Vertical.Top,
@@ -99,7 +99,11 @@ private fun SmallWidget(card: CountdownCard, size: DpSize) {
     ) {
         Text(
             text = card.title,
-            style = TextStyle(color = ColorProvider(parseWidgetColor(card.tintHex)), fontSize = 13.sp, fontWeight = FontWeight.Medium),
+            style = TextStyle(
+                color = ColorProvider(countdownColor(card.tintHex)),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            ),
             maxLines = 1
         )
         Spacer(GlanceModifier.height(topSpacer))
@@ -109,7 +113,10 @@ private fun SmallWidget(card: CountdownCard, size: DpSize) {
         )
         Text(
             text = card.subtitle,
-            style = TextStyle(color = ColorProvider(parseWidgetColor("#B8FFFFFF")), fontSize = 11.sp),
+            style = TextStyle(
+                color = ColorProvider(countdownColor(CountdownColorHex.WidgetSmallSubtitle)),
+                fontSize = 11.sp
+            ),
             maxLines = if (compact) 1 else 2
         )
     }
@@ -130,7 +137,7 @@ private fun OverviewWidget(cards: List<CountdownCard>, maxCards: Int, size: DpSi
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(parseWidgetColor("#111827")))
+            .background(ColorProvider(countdownColor(CountdownColorHex.WidgetBackground)))
             .padding(padding)
     ) {
         visibleCards.chunked(columns).forEachIndexed { rowIndex, rowCards ->
@@ -175,7 +182,7 @@ private fun WidgetCard(
 
     Column(
         modifier = modifier
-            .background(ColorProvider(parseWidgetColor("#14FFFFFF")))
+            .background(ColorProvider(countdownColor(CountdownColorHex.WidgetCardBackground)))
             .padding(if (compact) 8.dp else 10.dp)
             .clickable(actionStartActivity(deepLinkIntent(card.deepLink))),
         verticalAlignment = Alignment.Vertical.Top
@@ -185,13 +192,17 @@ private fun WidgetCard(
                 provider = ImageProvider(iconResource(card.iconName)),
                 contentDescription = null,
                 modifier = GlanceModifier.size(18.dp),
-                colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(parseWidgetColor(card.tintHex)))
+                colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(countdownColor(card.tintHex)))
             )
             Spacer(GlanceModifier.height(6.dp))
         }
         Text(
             text = card.title,
-            style = TextStyle(color = ColorProvider(parseWidgetColor("#E6FFFFFF")), fontSize = if (compact) 11.sp else 12.sp, fontWeight = FontWeight.Medium),
+            style = TextStyle(
+                color = ColorProvider(countdownColor(CountdownColorHex.WidgetTitle)),
+                fontSize = if (compact) 11.sp else 12.sp,
+                fontWeight = FontWeight.Medium
+            ),
             maxLines = titleLines
         )
         Text(
@@ -201,7 +212,10 @@ private fun WidgetCard(
         if (subtitleLines > 0) {
             Text(
                 text = card.subtitle,
-                style = TextStyle(color = ColorProvider(parseWidgetColor("#9EFFFFFF")), fontSize = 10.sp),
+                style = TextStyle(
+                    color = ColorProvider(countdownColor(CountdownColorHex.WidgetSubtitle)),
+                    fontSize = 10.sp
+                ),
                 maxLines = subtitleLines
             )
         }
@@ -252,8 +266,4 @@ private fun rowCount(itemCount: Int, columns: Int): Int {
 
 private fun overviewPadding(size: DpSize): Dp {
     return if (size.height < 180.dp || size.width < 260.dp) 12.dp else 14.dp
-}
-
-private fun parseWidgetColor(hex: String): Color {
-    return Color(android.graphics.Color.parseColor(hex))
 }

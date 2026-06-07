@@ -23,7 +23,7 @@ class CountdownStore(context: Context) {
                 CountdownEvent(
                     title = "产品上线",
                     targetDate = LocalDate.now().plusDays(30).toString(),
-                    colorHex = "#FF6B4A"
+                    colorHex = CountdownColorHex.Brand
                 )
             )
         )

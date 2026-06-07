@@ -85,10 +85,10 @@ class MainActivity : ComponentActivity() {
 private fun CountdownTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = androidx.compose.material3.lightColorScheme(
-            primary = parseColor("#FF6B4A"),
-            secondary = parseColor("#10B981"),
+            primary = countdownColor(CountdownColorHex.Brand),
+            secondary = countdownColor(CountdownColorHex.AccentGreen),
             surface = Color.White,
-            background = parseColor("#FFF7ED")
+            background = countdownColor(CountdownColorHex.BackgroundStart)
         ),
         content = content
     )
@@ -104,7 +104,7 @@ private fun CountdownApp(selectedEventId: String?) {
     var savedMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(events) {
-        snapshot = makeCurrentPreviewSnapshot(store, events)
+        snapshot = makeCurrentPreviewSnapshot(events)
     }
 
     Scaffold { paddingValues ->
@@ -113,7 +113,11 @@ private fun CountdownApp(selectedEventId: String?) {
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(parseColor("#FFF7ED"), parseColor("#FFEDD5"), parseColor("#DCFCE7"))
+                        listOf(
+                            countdownColor(CountdownColorHex.BackgroundStart),
+                            countdownColor(CountdownColorHex.BackgroundMiddle),
+                            countdownColor(CountdownColorHex.BackgroundEnd)
+                        )
                     )
                 )
                 .padding(paddingValues)
@@ -138,19 +142,19 @@ private fun CountdownApp(selectedEventId: String?) {
                     canMoveUp = index > 0,
                     canMoveDown = index < events.lastIndex,
                     onChange = { updated ->
-                        events = events.toMutableList().also { it[index] = updated }
+                        events = events.replaced(index, updated)
                         savedMessage = null
                     },
                     onDelete = {
-                        events = events.toMutableList().also { it.removeAt(index) }
+                        events = events.removedAt(index)
                         savedMessage = null
                     },
                     onMoveUp = {
-                        events = events.toMutableList().also { it.swap(index, index - 1) }
+                        events = events.moved(index, index - 1)
                         savedMessage = null
                     },
                     onMoveDown = {
-                        events = events.toMutableList().also { it.swap(index, index + 1) }
+                        events = events.moved(index, index + 1)
                         savedMessage = null
                     }
                 )
@@ -161,7 +165,7 @@ private fun CountdownApp(selectedEventId: String?) {
             item {
                 SavePanel(
                     savedMessage = savedMessage,
-                    tintHex = events.firstOrNull()?.colorHex ?: "#FF6B4A",
+                    tintHex = events.firstOrNull()?.colorHex ?: CountdownColorHex.Brand,
                     onSave = {
                         store.saveCustomEvents(events)
                         events = store.loadCustomEvents()
@@ -180,11 +184,11 @@ private fun CountdownApp(selectedEventId: String?) {
     }
 }
 
-private fun makePreviewCard(event: CountdownEvent): CountdownCard {
-    val now = LocalDate.now()
+private fun makePreviewCard(event: CountdownEvent, now: LocalDate = LocalDate.now()): CountdownCard {
     val days = CountdownCalculator.daysBetween(now, LocalDate.parse(event.targetDate)).coerceAtLeast(0)
+    val title = event.title.trim().ifEmpty { "未命名事件" }
     return CountdownCard(
-        title = if (event.isPinned) "置顶 · ${event.title.trim().ifEmpty { "未命名事件" }}" else event.title.trim().ifEmpty { "未命名事件" },
+        title = if (event.isPinned) "置顶 · $title" else title,
         subtitle = if (days == 0L) "今天就是目标日" else "你的自定义倒计时",
         days = days,
         iconName = if (event.isPinned) "pin" else "calendar",
@@ -194,21 +198,26 @@ private fun makePreviewCard(event: CountdownEvent): CountdownCard {
     )
 }
 
-private fun makeCurrentPreviewSnapshot(store: CountdownStore, events: List<CountdownEvent>): CountdownSnapshot {
-    val baseCards = CountdownCalculator.makeSnapshot(store).cards.take(2)
+private fun makeCurrentPreviewSnapshot(events: List<CountdownEvent>): CountdownSnapshot {
+    val now = LocalDate.now()
     return CountdownSnapshot(
-        generatedAt = LocalDate.now(),
-        cards = baseCards + events.map(::makePreviewCard)
+        generatedAt = now,
+        cards = CountdownCalculator.makeDefaultCards(now) + events.map { makePreviewCard(it, now) }
     )
 }
 
 @Composable
 private fun Header() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("把重要日子放到桌面上", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = parseColor("#111827"))
+        Text(
+            "把重要日子放到桌面上",
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold,
+            color = countdownColor(CountdownColorHex.TextPrimary)
+        )
         Text(
             "默认显示周末、最近节假日和多个自定义目标日，支持桌面小组件与置顶排序。",
-            color = parseColor("#6B7280"),
+            color = countdownColor(CountdownColorHex.TextSecondary),
             fontSize = 14.sp
         )
     }
@@ -235,15 +244,15 @@ private fun CountdownCardRow(card: CountdownCard) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconBubble(card.iconName, parseColor(card.tintHex))
+            IconBubble(card.iconName, countdownColor(card.tintHex))
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(card.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(card.subtitle, color = parseColor("#6B7280"), fontSize = 12.sp)
+                Text(card.subtitle, color = countdownColor(CountdownColorHex.TextSecondary), fontSize = 12.sp)
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(card.days.toString(), fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Text("天", color = parseColor("#6B7280"), fontSize = 12.sp)
+                Text("天", color = countdownColor(CountdownColorHex.TextSecondary), fontSize = 12.sp)
             }
         }
     }
@@ -281,7 +290,7 @@ private fun CustomEditorHeader(onAdd: () -> Unit) {
         }
         Text(
             "支持配置多个重要日期，小组件会优先展示最近的自定义事件；点桌面小组件可直达对应条目。",
-            color = parseColor("#6B7280"),
+            color = countdownColor(CountdownColorHex.TextSecondary),
             fontSize = 13.sp
         )
     }
@@ -300,7 +309,7 @@ private fun CustomEventEditor(
 ) {
     val context = LocalContext.current
     val targetDate = LocalDate.parse(event.targetDate)
-    val borderColor = if (highlighted) parseColor(event.colorHex) else Color.Transparent
+    val borderColor = if (highlighted) countdownColor(event.colorHex) else Color.Transparent
 
     Card(
         modifier = Modifier
@@ -337,7 +346,11 @@ private fun CustomEventEditor(
                         Icon(Icons.Filled.ArrowDownward, contentDescription = "下移")
                     }
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Filled.Delete, contentDescription = "删除", tint = parseColor("#DC2626"))
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = "删除",
+                            tint = countdownColor(CountdownColorHex.Danger)
+                        )
                     }
                 }
             }
@@ -369,12 +382,12 @@ private fun CustomEventEditor(
 @Composable
 private fun ColorSwatchPicker(selectedHex: String, onSelect: (String) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        listOf("#FF6B4A", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6").forEach { hex ->
+        CountdownColorHex.eventSwatches.forEach { hex ->
             Box(
                 modifier = Modifier
                     .size(30.dp)
                     .clip(CircleShape)
-                    .background(parseColor(hex))
+                    .background(countdownColor(hex))
                     .border(if (selectedHex == hex) 3.dp else 0.dp, Color.White, CircleShape)
                     .clickable { onSelect(hex) },
                 contentAlignment = Alignment.Center
@@ -394,7 +407,11 @@ private fun EmptyState() {
         shape = RoundedCornerShape(8.dp),
         color = Color.White.copy(alpha = 0.72f)
     ) {
-        Text("还没有自定义事件，点右上角“新增”来添加你的第一个倒计时。", modifier = Modifier.padding(18.dp), color = parseColor("#6B7280"))
+        Text(
+            "还没有自定义事件，点右上角“新增”来添加你的第一个倒计时。",
+            modifier = Modifier.padding(18.dp),
+            color = countdownColor(CountdownColorHex.TextSecondary)
+        )
     }
 }
 
@@ -403,14 +420,14 @@ private fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Unit
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
             onClick = onSave,
-            colors = ButtonDefaults.buttonColors(containerColor = parseColor(tintHex)),
+            colors = ButtonDefaults.buttonColors(containerColor = countdownColor(tintHex)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(Icons.Filled.Save, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text("保存并刷新小组件")
         }
-        savedMessage?.let { Text(it, color = parseColor("#047857"), fontSize = 13.sp) }
+        savedMessage?.let { Text(it, color = countdownColor(CountdownColorHex.Success), fontSize = 13.sp) }
     }
 }
 
@@ -420,18 +437,26 @@ private fun Footer() {
         Text("节假日说明", fontWeight = FontWeight.SemiBold)
         Text(
             "当前内置了 2026 年大陆法定节假日数据；自定义倒计时支持多条配置。后续年份可在 HolidayCalendar.kt 中继续追加。",
-            color = parseColor("#6B7280"),
+            color = countdownColor(CountdownColorHex.TextSecondary),
             fontSize = 13.sp
         )
     }
+}
+
+private fun <T> List<T>.replaced(index: Int, item: T): List<T> {
+    return toMutableList().also { it[index] = item }
+}
+
+private fun <T> List<T>.removedAt(index: Int): List<T> {
+    return toMutableList().also { it.removeAt(index) }
+}
+
+private fun <T> List<T>.moved(from: Int, to: Int): List<T> {
+    return toMutableList().also { it.swap(from, to) }
 }
 
 private fun <T> MutableList<T>.swap(from: Int, to: Int) {
     val item = this[from]
     this[from] = this[to]
     this[to] = item
-}
-
-private fun parseColor(hex: String): Color {
-    return Color(android.graphics.Color.parseColor(hex))
 }

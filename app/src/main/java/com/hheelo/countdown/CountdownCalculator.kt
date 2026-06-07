@@ -9,8 +9,12 @@ object CountdownCalculator {
         val customCards = store.loadCustomEvents().map { makeCustomCard(it, now) }
         return CountdownSnapshot(
             generatedAt = now,
-            cards = listOf(makeWeekendCard(now), makeHolidayCard(now)) + customCards
+            cards = makeDefaultCards(now) + customCards
         )
+    }
+
+    fun makeDefaultCards(now: LocalDate = LocalDate.now()): List<CountdownCard> {
+        return listOf(makeWeekendCard(now), makeHolidayCard(now))
     }
 
     fun daysBetween(from: LocalDate, to: LocalDate): Long {
@@ -25,7 +29,7 @@ object CountdownCalculator {
             subtitle = if (days == 0L) "今天就是周末" else "距离周末还有",
             days = days,
             iconName = "weekend",
-            tintHex = "#FDBA74",
+            tintHex = CountdownColorHex.Weekend,
             deepLink = AppDeepLink.HomeUrl,
             eventId = null
         )
@@ -39,7 +43,7 @@ object CountdownCalculator {
                 subtitle = "请补充节假日数据",
                 days = 0,
                 iconName = "holiday",
-                tintHex = "#34D399",
+                tintHex = CountdownColorHex.Holiday,
                 deepLink = AppDeepLink.HomeUrl,
                 eventId = null
             )
@@ -51,7 +55,7 @@ object CountdownCalculator {
             subtitle = if (!now.isBefore(holiday.start)) "正在放假中" else "距离${holiday.name}还有",
             days = days,
             iconName = "holiday",
-            tintHex = "#34D399",
+            tintHex = CountdownColorHex.Holiday,
             deepLink = AppDeepLink.HomeUrl,
             eventId = null
         )
