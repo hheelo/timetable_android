@@ -1,0 +1,47 @@
+package com.hheelo.countdown
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+@Composable
+internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(
+            onClick = onSave,
+            colors = ButtonDefaults.buttonColors(containerColor = countdownColor(tintHex)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Filled.Save, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("保存并刷新小组件")
+        }
+        savedMessage?.let { Text(it, color = countdownColor(CountdownColorHex.Success), fontSize = 13.sp) }
+    }
+}
+
+@Composable
+internal fun Footer() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
+        Text("节假日说明", fontWeight = FontWeight.SemiBold)
+        Text(
+            "当前内置了 2026 年大陆法定节假日数据；自定义倒计时支持多条配置。后续年份可在 HolidayCalendar.kt 中继续追加。",
+            color = countdownColor(CountdownColorHex.TextSecondary),
+            fontSize = 13.sp
+        )
+    }
+}

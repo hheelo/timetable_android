@@ -26,13 +26,28 @@ open timetable_android
 
 ## 构建
 
-在配置好 JDK 和 Android SDK 的环境中执行：
+在配置好 JDK 17 和 Android SDK 的环境中执行：
 
 ```bash
 ./gradlew assembleDebug
 ```
 
-如果没有 Gradle wrapper，也可以直接让 Android Studio 同步项目；它会使用 `settings.gradle.kts` 和根目录 `build.gradle.kts` 下载所需插件。
+运行 JVM 单元测试：
+
+```bash
+./gradlew test
+```
+
+仓库已包含 Gradle wrapper；也可以直接让 Android Studio 同步项目，它会使用 `settings.gradle.kts` 和根目录 `build.gradle.kts` 下载所需插件。
+
+## CI
+
+GitHub Actions workflow 位于 `.github/workflows/android.yml`，会在 push 到 `main` 或 pull request 时执行：
+
+```bash
+./gradlew test
+./gradlew assembleDebug
+```
 
 ## 节假日数据
 

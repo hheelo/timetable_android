@@ -3,6 +3,7 @@ package com.hheelo.countdown
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -20,6 +21,7 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
@@ -35,9 +37,42 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import kotlinx.coroutines.runBlocking
 
 class CountdownWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = CountdownWidget()
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+
+        if (intent.action !in widgetRefreshActions) return
+
+        val appContext = context.applicationContext
+        val pendingResult = goAsync()
+        Thread({
+            try {
+                runBlocking {
+                    glanceAppWidget.updateAll(appContext)
+                }
+            } catch (throwable: Throwable) {
+                Log.w(TAG, "Failed to refresh countdown widget for ${intent.action}", throwable)
+            } finally {
+                pendingResult.finish()
+            }
+        }, "CountdownWidgetRefresh").start()
+    }
+
+    private companion object {
+        const val TAG = "CountdownWidgetReceiver"
+
+        val widgetRefreshActions = setOf(
+            Intent.ACTION_DATE_CHANGED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_MY_PACKAGE_REPLACED
+        )
+    }
 }
 
 class CountdownWidget : GlanceAppWidget() {
@@ -68,11 +103,12 @@ class CountdownWidget : GlanceAppWidget() {
         provideContent {
             val size = LocalSize.current
             val maxCards = visibleCardCount(size)
+            val widgetCards = snapshot.cards.sortedForWidget()
             if (maxCards == 1) {
-                val featured = snapshot.cards.minByOrNull { it.days } ?: snapshot.cards.first()
+                val featured = widgetCards.firstOrNull() ?: snapshot.cards.first()
                 SmallWidget(featured, size)
             } else {
-                OverviewWidget(snapshot.cards, maxCards, size)
+                OverviewWidget(widgetCards, maxCards, size)
             }
         }
     }
@@ -266,4 +302,28 @@ private fun rowCount(itemCount: Int, columns: Int): Int {
 
 private fun overviewPadding(size: DpSize): Dp {
     return if (size.height < 180.dp || size.width < 260.dp) 12.dp else 14.dp
+}
+
+private fun List<CountdownCard>.sortedForWidget(): List<CountdownCard> {
+    return sortedWith(
+        compareBy<CountdownCard> { it.widgetDisplayPriority() }
+            .thenBy { it.days }
+            .thenBy { it.title }
+    )
+}
+
+private fun CountdownCard.widgetDisplayPriority(): Int {
+    return when {
+        isPinnedCustomCard() -> 0
+        isCustomCard() -> 1
+        else -> 2
+    }
+}
+
+private fun CountdownCard.isPinnedCustomCard(): Boolean {
+    return isCustomCard() && iconName == "pin"
+}
+
+private fun CountdownCard.isCustomCard(): Boolean {
+    return eventId != null
 }
