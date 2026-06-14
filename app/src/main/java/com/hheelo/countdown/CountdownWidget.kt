@@ -99,7 +99,7 @@ class CountdownWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val store = CountdownStore(context)
-        val snapshot = CountdownCalculator.makeSnapshot(store)
+        val snapshot = CountdownCalculator.makeWidgetSnapshot(store)
         provideContent {
             val size = LocalSize.current
             val maxCards = visibleCardCount(size)

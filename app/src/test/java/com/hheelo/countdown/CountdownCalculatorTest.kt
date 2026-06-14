@@ -43,4 +43,49 @@ class CountdownCalculatorTest {
         assertEquals("holiday", holiday.iconName)
         assertEquals(AppDeepLink.HomeUrl, holiday.deepLink)
     }
+
+    @Test
+    fun widgetSnapshotSkipsExpiredCustomEvents() {
+        val snapshot = CountdownCalculator.makeWidgetSnapshot(
+            customEvents = listOf(
+                CountdownEvent(
+                    id = "expired",
+                    title = "已过期",
+                    targetDate = "2026-06-11"
+                ),
+                CountdownEvent(
+                    id = "today",
+                    title = "今天到期",
+                    targetDate = "2026-06-12"
+                ),
+                CountdownEvent(
+                    id = "future",
+                    title = "未来事件",
+                    targetDate = "2026-06-13"
+                )
+            ),
+            now = LocalDate.of(2026, 6, 12)
+        )
+
+        val customCards = snapshot.cards.filter { it.eventId != null }
+        assertEquals(listOf("today", "future"), customCards.map { it.eventId })
+        assertEquals(listOf(0L, 1L), customCards.map { it.days })
+    }
+
+    @Test
+    fun widgetSnapshotFallsBackToDefaultCardsWhenAllCustomEventsAreExpired() {
+        val snapshot = CountdownCalculator.makeWidgetSnapshot(
+            customEvents = listOf(
+                CountdownEvent(
+                    id = "expired",
+                    title = "已过期",
+                    targetDate = "2026-06-11"
+                )
+            ),
+            now = LocalDate.of(2026, 6, 12)
+        )
+
+        assertEquals(2, snapshot.cards.size)
+        assertEquals(listOf(null, null), snapshot.cards.map { it.eventId })
+    }
 }

@@ -6,7 +6,39 @@ import java.time.temporal.ChronoUnit
 
 object CountdownCalculator {
     fun makeSnapshot(store: CountdownStore, now: LocalDate = LocalDate.now()): CountdownSnapshot {
-        val customCards = store.loadCustomEvents().map { makeCustomCard(it, now) }
+        return makeSnapshot(
+            customEvents = store.loadCustomEvents(),
+            now = now,
+            includeExpiredCustomEvents = true
+        )
+    }
+
+    fun makeWidgetSnapshot(store: CountdownStore, now: LocalDate = LocalDate.now()): CountdownSnapshot {
+        return makeWidgetSnapshot(
+            customEvents = store.loadCustomEvents(),
+            now = now
+        )
+    }
+
+    fun makeWidgetSnapshot(
+        customEvents: List<CountdownEvent>,
+        now: LocalDate = LocalDate.now()
+    ): CountdownSnapshot {
+        return makeSnapshot(
+            customEvents = customEvents,
+            now = now,
+            includeExpiredCustomEvents = false
+        )
+    }
+
+    private fun makeSnapshot(
+        customEvents: List<CountdownEvent>,
+        now: LocalDate,
+        includeExpiredCustomEvents: Boolean
+    ): CountdownSnapshot {
+        val customCards = customEvents
+            .filter { includeExpiredCustomEvents || !targetDateFor(it).isBefore(now) }
+            .map { makeCustomCard(it, now) }
         return CountdownSnapshot(
             generatedAt = now,
             cards = makeDefaultCards(now) + customCards
@@ -62,7 +94,7 @@ object CountdownCalculator {
     }
 
     private fun makeCustomCard(event: CountdownEvent, now: LocalDate): CountdownCard {
-        val target = LocalDate.parse(event.targetDate)
+        val target = targetDateFor(event)
         val days = daysBetween(now, target).coerceAtLeast(0)
         return CountdownCard(
             title = if (event.isPinned) "置顶 · ${event.title}" else event.title,
@@ -73,6 +105,10 @@ object CountdownCalculator {
             deepLink = AppDeepLink.eventUrl(event.id),
             eventId = event.id
         )
+    }
+
+    private fun targetDateFor(event: CountdownEvent): LocalDate {
+        return LocalDate.parse(event.targetDate)
     }
 
     private fun nextWeekendStart(now: LocalDate): LocalDate {
