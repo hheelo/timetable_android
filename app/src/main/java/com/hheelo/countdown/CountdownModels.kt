@@ -30,7 +30,8 @@ data class CountdownCard(
     val iconName: String,
     val tintHex: String,
     val deepLink: String,
-    val eventId: String?
+    val eventId: String?,
+    val isPinned: Boolean = false
 )
 
 data class CountdownSnapshot(

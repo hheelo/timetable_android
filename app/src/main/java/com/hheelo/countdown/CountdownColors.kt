@@ -1,6 +1,7 @@
 package com.hheelo.countdown
 
 import androidx.compose.ui.graphics.Color
+import java.util.concurrent.ConcurrentHashMap
 
 object CountdownColorHex {
     const val Brand = "#FF6B4A"
@@ -23,6 +24,10 @@ object CountdownColorHex {
     val eventSwatches = listOf(Brand, "#F59E0B", AccentGreen, "#3B82F6", "#8B5CF6")
 }
 
+private val countdownColorCache = ConcurrentHashMap<String, Color>()
+
 fun countdownColor(hex: String): Color {
-    return Color(android.graphics.Color.parseColor(hex))
+    return countdownColorCache.getOrPut(hex) {
+        Color(android.graphics.Color.parseColor(hex))
+    }
 }

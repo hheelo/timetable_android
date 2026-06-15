@@ -68,12 +68,14 @@ object CountdownCalculator {
     }
 
     private fun makeHolidayCard(now: LocalDate): CountdownCard {
-        val holiday = HolidayCalendar.upcomingHoliday(now)
-        if (holiday == null) {
+        val lookup = HolidayCalendar.lookup(now)
+        val holiday = lookup.upcomingHoliday
+        if (lookup.status == HolidayLookupStatus.UPCOMING_FOUND && holiday != null) {
+            val days = daysBetween(now, holiday.start).coerceAtLeast(0)
             return CountdownCard(
-                title = "节假日",
-                subtitle = "请补充节假日数据",
-                days = 0,
+                title = holiday.name,
+                subtitle = if (!now.isBefore(holiday.start)) "正在放假中" else "距离${holiday.name}还有",
+                days = days,
                 iconName = "holiday",
                 tintHex = CountdownColorHex.Holiday,
                 deepLink = AppDeepLink.HomeUrl,
@@ -81,11 +83,15 @@ object CountdownCalculator {
             )
         }
 
-        val days = daysBetween(now, holiday.start).coerceAtLeast(0)
+        val subtitle = when (lookup.status) {
+            HolidayLookupStatus.CURRENT_YEAR_EXHAUSTED_NEXT_YEAR_DATA_MISSING ->
+                "今年假期已过，${now.year + 1} 年数据待更新"
+            else -> "暂无 ${now.year} 年节假日数据"
+        }
         return CountdownCard(
-            title = holiday.name,
-            subtitle = if (!now.isBefore(holiday.start)) "正在放假中" else "距离${holiday.name}还有",
-            days = days,
+            title = "节假日",
+            subtitle = subtitle,
+            days = 0,
             iconName = "holiday",
             tintHex = CountdownColorHex.Holiday,
             deepLink = AppDeepLink.HomeUrl,
@@ -103,7 +109,8 @@ object CountdownCalculator {
             iconName = if (event.isPinned) "pin" else "calendar",
             tintHex = event.colorHex,
             deepLink = AppDeepLink.eventUrl(event.id),
-            eventId = event.id
+            eventId = event.id,
+            isPinned = event.isPinned
         )
     }
 

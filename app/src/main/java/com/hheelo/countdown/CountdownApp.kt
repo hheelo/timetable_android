@@ -9,21 +9,15 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
-import androidx.glance.appwidget.updateAll
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.time.LocalDate
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private const val FirstEventItemIndex = 3
 
@@ -32,16 +26,21 @@ internal fun CountdownApp(
     selectedEventId: String?,
     selectedEventRequest: Int
 ) {
-    val context = LocalContext.current
-    val store = remember { CountdownStore(context) }
-    val scope = rememberCoroutineScope()
+    val vm: CountdownViewModel = viewModel()
     val listState = rememberLazyListState()
-    var events by remember { mutableStateOf(store.loadCustomEvents()) }
-    var snapshot by remember { mutableStateOf(CountdownCalculator.makeSnapshot(store)) }
-    var savedMessage by remember { mutableStateOf<String?>(null) }
+    val events = vm.events
+    val snapshot = vm.snapshot
+    val savedMessage = vm.savedMessage
 
-    LaunchedEffect(events) {
-        snapshot = makeCurrentPreviewSnapshot(events)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                vm.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     LaunchedEffect(selectedEventId, selectedEventRequest, events) {
@@ -73,11 +72,7 @@ internal fun CountdownApp(
             item { PreviewCards(snapshot.cards) }
             item {
                 CustomEditorHeader(
-                    onAdd = {
-                        val offset = 7L * (events.size + 1)
-                        events = events + CountdownEvent.empty(offset)
-                        savedMessage = null
-                    }
+                    onAdd = { vm.add() }
                 )
             }
             itemsIndexed(events, key = { _, event -> event.id }) { index, event ->
@@ -86,22 +81,10 @@ internal fun CountdownApp(
                     highlighted = event.id == selectedEventId,
                     canMoveUp = index > 0,
                     canMoveDown = index < events.lastIndex,
-                    onChange = { updated ->
-                        events = events.replaced(index, updated)
-                        savedMessage = null
-                    },
-                    onDelete = {
-                        events = events.removedAt(index)
-                        savedMessage = null
-                    },
-                    onMoveUp = {
-                        events = events.moved(index, index - 1)
-                        savedMessage = null
-                    },
-                    onMoveDown = {
-                        events = events.moved(index, index + 1)
-                        savedMessage = null
-                    }
+                    onChange = { updated -> vm.update(index, updated) },
+                    onDelete = { vm.delete(index) },
+                    onMoveUp = { vm.moveUp(index) },
+                    onMoveDown = { vm.moveDown(index) }
                 )
             }
             if (events.isEmpty()) {
@@ -111,42 +94,10 @@ internal fun CountdownApp(
                 SavePanel(
                     savedMessage = savedMessage,
                     tintHex = events.firstOrNull()?.colorHex ?: CountdownColorHex.Brand,
-                    onSave = {
-                        store.saveCustomEvents(events)
-                        events = store.loadCustomEvents()
-                        snapshot = CountdownCalculator.makeSnapshot(store)
-                        savedMessage = "已保存并刷新桌面小组件"
-                        scope.launch {
-                            withContext(Dispatchers.IO) {
-                                CountdownWidget().updateAll(context)
-                            }
-                        }
-                    }
+                    onSave = { vm.save() }
                 )
             }
             item { Footer() }
         }
     }
-}
-
-private fun makePreviewCard(event: CountdownEvent, now: LocalDate = LocalDate.now()): CountdownCard {
-    val days = CountdownCalculator.daysBetween(now, LocalDate.parse(event.targetDate)).coerceAtLeast(0)
-    val title = event.title.trim().ifEmpty { "未命名事件" }
-    return CountdownCard(
-        title = if (event.isPinned) "置顶 · $title" else title,
-        subtitle = if (days == 0L) "今天就是目标日" else "你的自定义倒计时",
-        days = days,
-        iconName = if (event.isPinned) "pin" else "calendar",
-        tintHex = event.colorHex,
-        deepLink = AppDeepLink.eventUrl(event.id),
-        eventId = event.id
-    )
-}
-
-private fun makeCurrentPreviewSnapshot(events: List<CountdownEvent>): CountdownSnapshot {
-    val now = LocalDate.now()
-    return CountdownSnapshot(
-        generatedAt = now,
-        cards = CountdownCalculator.makeDefaultCards(now) + events.map { makePreviewCard(it, now) }
-    )
 }

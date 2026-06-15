@@ -33,6 +33,8 @@ import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.layout.width
+import androidx.glance.semantics.contentDescription
+import androidx.glance.semantics.semantics
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -129,7 +131,14 @@ private fun SmallWidget(card: CountdownCard, size: DpSize) {
             .fillMaxSize()
             .background(ColorProvider(countdownColor(CountdownColorHex.WidgetBackground)))
             .padding(padding)
-            .clickable(actionStartActivity(deepLinkIntent(card.deepLink))),
+            .clickable(actionStartActivity(deepLinkIntent(card.deepLink)))
+            .semantics {
+                contentDescription = if (card.days == 0L) {
+                    "${card.title}，就是今天"
+                } else {
+                    "${card.title}，还有 ${card.days} 天"
+                }
+            },
         verticalAlignment = Alignment.Vertical.Top,
         horizontalAlignment = Alignment.Horizontal.Start
     ) {
@@ -220,7 +229,14 @@ private fun WidgetCard(
         modifier = modifier
             .background(ColorProvider(countdownColor(CountdownColorHex.WidgetCardBackground)))
             .padding(if (compact) 8.dp else 10.dp)
-            .clickable(actionStartActivity(deepLinkIntent(card.deepLink))),
+            .clickable(actionStartActivity(deepLinkIntent(card.deepLink)))
+            .semantics {
+                contentDescription = if (card.days == 0L) {
+                    "${card.title}，就是今天"
+                } else {
+                    "${card.title}，还有 ${card.days} 天"
+                }
+            },
         verticalAlignment = Alignment.Vertical.Top
     ) {
         if (!compact) {
@@ -321,7 +337,7 @@ private fun CountdownCard.widgetDisplayPriority(): Int {
 }
 
 private fun CountdownCard.isPinnedCustomCard(): Boolean {
-    return isCustomCard() && iconName == "pin"
+    return isCustomCard() && isPinned
 }
 
 private fun CountdownCard.isCustomCard(): Boolean {

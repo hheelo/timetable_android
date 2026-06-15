@@ -1,6 +1,7 @@
 package com.hheelo.countdown
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 
@@ -40,6 +41,17 @@ class CountdownCalculatorTest {
         assertEquals("国庆", holiday.title)
         assertEquals("正在放假中", holiday.subtitle)
         assertEquals(0, holiday.days)
+        assertEquals("holiday", holiday.iconName)
+        assertEquals(AppDeepLink.HomeUrl, holiday.deepLink)
+    }
+
+    @Test
+    fun holidayCardFallsBackWhenYearHasNoHolidayData() {
+        val holiday = CountdownCalculator.makeDefaultCards(LocalDate.of(2099, 1, 1))[1]
+
+        assertEquals("节假日", holiday.title)
+        assertEquals(0L, holiday.days)
+        assertTrue(holiday.subtitle.contains("数据"))
         assertEquals("holiday", holiday.iconName)
         assertEquals(AppDeepLink.HomeUrl, holiday.deepLink)
     }
