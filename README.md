@@ -13,6 +13,13 @@
 - 本地 SharedPreferences 持久化
 - Android 桌面小组件
 - 小组件点击通过 `timetable://` 深链回到 App 或对应事件
+- 主界面底部显示当前应用版本号
+
+## 环境要求
+
+- JDK 17
+- Android SDK（compileSdk 35）
+- 最低支持 Android 8.0（minSdk 26）
 
 ## 打开方式
 
@@ -42,12 +49,34 @@ open timetable_android
 
 ## CI
 
-GitHub Actions workflow 位于 `.github/workflows/android.yml`，会在 push 到 `main` 或 pull request 时执行：
+GitHub Actions workflow 位于 `.github/workflows/android.yml`，包含两个任务：
 
-```bash
-./gradlew test
-./gradlew assembleDebug
-```
+- **build**：在 push 到 `main` 或 pull request 时执行单元测试与 debug 构建。
+
+  ```bash
+  ./gradlew test
+  ./gradlew assembleDebug
+  ```
+
+- **release**：在推送 `v*` 格式的 tag 时执行，构建 debug APK 并自动创建 GitHub Release，附带 APK 及自动生成的更新日志。
+
+## 发布新版本
+
+1. 在 `app/build.gradle.kts` 中递增 `versionCode` 与 `versionName`，提交并推送到 `main`：
+
+   ```bash
+   git commit -am "Release vX.Y.Z"
+   git push origin main
+   ```
+
+2. 打上对应的 tag 并推送，触发 release 任务：
+
+   ```bash
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+
+tag 名需以 `v` 开头才会触发发布。发布完成后可在仓库 Releases 页面下载 APK。
 
 ## 节假日数据
 
