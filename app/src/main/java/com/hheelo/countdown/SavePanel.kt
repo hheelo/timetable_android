@@ -13,7 +13,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +38,12 @@ internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Uni
 
 @Composable
 internal fun Footer() {
+    val context = LocalContext.current
+    val versionName = remember {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull()
+    }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
         Text("节假日说明", fontWeight = FontWeight.SemiBold)
         Text(
@@ -43,5 +51,12 @@ internal fun Footer() {
             color = countdownColor(CountdownColorHex.TextSecondary),
             fontSize = 13.sp
         )
+        versionName?.let {
+            Text(
+                "版本 v$it",
+                color = countdownColor(CountdownColorHex.TextSecondary),
+                fontSize = 12.sp
+            )
+        }
     }
 }
