@@ -78,6 +78,37 @@ GitHub Actions workflow 位于 `.github/workflows/android.yml`，包含两个任
 
 tag 名需以 `v` 开头才会触发发布。发布完成后可在仓库 Releases 页面下载 APK。
 
+## 项目结构
+
+```text
+timetable_android/
+├── app/
+│   ├── build.gradle.kts                  # 模块构建配置（版本号、依赖）
+│   └── src/
+│       ├── main/
+│       │   ├── AndroidManifest.xml       # 组件声明、deep link、小组件注册
+│       │   ├── java/com/hheelo/countdown/
+│       │   │   ├── MainActivity.kt           # 入口 Activity，处理 timetable:// 深链
+│       │   │   ├── CountdownApp.kt           # 主界面 Compose 布局
+│       │   │   ├── CountdownViewModel.kt     # UI 状态与业务逻辑，后台读写持久化
+│       │   │   ├── CountdownModels.kt        # CountdownEvent / CountdownCard 数据模型
+│       │   │   ├── CountdownStore.kt         # SharedPreferences 持久化与序列化
+│       │   │   ├── CountdownCalculator.kt    # 周末 / 节假日 / 自定义事件天数计算
+│       │   │   ├── HolidayCalendar.kt        # 内置法定节假日数据
+│       │   │   ├── CountdownPreviewCards.kt  # 顶部预览卡片与 Header
+│       │   │   ├── CustomEventEditor.kt      # 自定义事件编辑器
+│       │   │   ├── SavePanel.kt              # 保存按钮与 Footer（含版本号）
+│       │   │   ├── CountdownColors.kt        # 颜色常量与解析缓存
+│       │   │   ├── CountdownTheme.kt         # Compose 主题
+│       │   │   ├── ListExtensions.kt         # 不可变列表操作辅助函数
+│       │   │   └── CountdownWidget.kt        # Glance 桌面小组件
+│       │   └── res/                      # 图标、布局、小组件配置等资源
+│       └── test/                         # JVM 单元测试
+├── .github/workflows/android.yml         # CI（build + release）
+├── build.gradle.kts                      # 根构建脚本
+└── settings.gradle.kts                   # 模块与插件配置
+```
+
 ## 节假日数据
 
 节假日数据位于 `app/src/main/java/com/hheelo/countdown/HolidayCalendar.kt`，当前与 iOS 项目一致，内置 2026 年大陆法定节假日。
