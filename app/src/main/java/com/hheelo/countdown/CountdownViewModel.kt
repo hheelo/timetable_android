@@ -1,6 +1,7 @@
 package com.hheelo.countdown
 
 import android.app.Application
+import com.hheelo.countdown.logging.AppLog
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +14,10 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 class CountdownViewModel(application: Application) : AndroidViewModel(application) {
+    private companion object {
+        const val TAG = "CountdownViewModel"
+    }
+
     private val store = CountdownStore(application)
 
     var events by mutableStateOf<List<CountdownEvent>>(emptyList())
@@ -26,9 +31,14 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         viewModelScope.launch {
-            val loaded = withContext(Dispatchers.IO) { store.loadCustomEvents() }
-            events = loaded
-            snapshot = makeCurrentPreviewSnapshot(loaded)
+            runCatching {
+                withContext(Dispatchers.IO) { store.loadCustomEvents() }
+            }.onSuccess { loaded ->
+                events = loaded
+                snapshot = makeCurrentPreviewSnapshot(loaded)
+            }.onFailure {
+                AppLog.e(TAG, "加载事件失败，使用空列表", it)
+            }
         }
     }
 
@@ -61,9 +71,16 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         val current = events
         savedMessage = "已保存并刷新桌面小组件"
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                store.saveCustomEvents(current)
-                CountdownWidget().updateAll(getApplication())
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    store.saveCustomEvents(current)
+                    CountdownWidget().updateAll(getApplication())
+                }
+            }.onSuccess {
+                AppLog.i(TAG, "保存并刷新小组件完成，共 ${current.size} 个事件")
+            }.onFailure {
+                AppLog.e(TAG, "保存或刷新小组件失败", it)
+                savedMessage = "保存失败，请重试"
             }
         }
     }

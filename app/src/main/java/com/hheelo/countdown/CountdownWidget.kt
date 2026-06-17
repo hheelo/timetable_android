@@ -3,7 +3,7 @@ package com.hheelo.countdown
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
+import com.hheelo.countdown.logging.AppLog
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -53,11 +53,12 @@ class CountdownWidgetReceiver : GlanceAppWidgetReceiver() {
         val pendingResult = goAsync()
         Thread({
             try {
+                AppLog.i(TAG, "收到广播 ${intent.action}，开始刷新小组件")
                 runBlocking {
                     glanceAppWidget.updateAll(appContext)
                 }
             } catch (throwable: Throwable) {
-                Log.w(TAG, "Failed to refresh countdown widget for ${intent.action}", throwable)
+                AppLog.w(TAG, "刷新小组件失败，action=${intent.action}", throwable)
             } finally {
                 pendingResult.finish()
             }
@@ -102,6 +103,7 @@ class CountdownWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val store = CountdownStore(context)
         val snapshot = CountdownCalculator.makeWidgetSnapshot(store)
+        AppLog.d(TAG, "渲染小组件，卡片数=${snapshot.cards.size}")
         provideContent {
             val size = LocalSize.current
             val maxCards = visibleCardCount(size)
@@ -113,6 +115,10 @@ class CountdownWidget : GlanceAppWidget() {
                 OverviewWidget(widgetCards, maxCards, size)
             }
         }
+    }
+
+    private companion object {
+        const val TAG = "CountdownWidget"
     }
 }
 

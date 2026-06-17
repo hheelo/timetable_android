@@ -2,6 +2,7 @@ package com.hheelo.countdown
 
 import android.content.Intent
 import android.os.Bundle
+import com.hheelo.countdown.logging.AppLog
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
@@ -15,6 +16,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         selectedEventId = AppDeepLink.eventIdFrom(intent?.data)
+        AppLog.i(TAG, "onCreate，深链 data=${intent?.data}，解析到 eventId=$selectedEventId")
         setContent {
             CountdownTheme {
                 CountdownApp(
@@ -30,5 +32,10 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         selectedEventId = AppDeepLink.eventIdFrom(intent.data)
         selectedEventRequest += 1
+        AppLog.i(TAG, "onNewIntent，深链 data=${intent.data}，解析到 eventId=$selectedEventId")
+    }
+
+    private companion object {
+        const val TAG = "MainActivity"
     }
 }

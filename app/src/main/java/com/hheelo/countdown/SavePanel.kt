@@ -1,5 +1,9 @@
 package com.hheelo.countdown
 
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hheelo.countdown.logging.LogExporter
 
 @Composable
 internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Unit) {
@@ -36,6 +41,7 @@ internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Uni
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun Footer() {
     val context = LocalContext.current
@@ -53,9 +59,20 @@ internal fun Footer() {
         )
         versionName?.let {
             Text(
-                "版本 v$it",
+                "版本 v$it（长按导出日志）",
                 color = countdownColor(CountdownColorHex.TextSecondary),
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                modifier = Modifier.combinedClickable(
+                    onClick = {},
+                    onLongClick = {
+                        val intent = LogExporter.shareIntent(context)
+                        if (intent != null) {
+                            context.startActivity(Intent.createChooser(intent, "分享日志"))
+                        } else {
+                            Toast.makeText(context, "暂无日志可导出", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
             )
         }
     }

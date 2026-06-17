@@ -14,6 +14,7 @@
 - Android 桌面小组件
 - 小组件点击通过 `timetable://` 深链回到 App 或对应事件
 - 主界面底部显示当前应用版本号
+- 统一日志模块（Logcat + 内部存储文件 + 崩溃捕获），长按版本号可一键导出/分享日志
 
 ## 环境要求
 
@@ -101,7 +102,9 @@ timetable_android/
 │       │   │   ├── CountdownColors.kt        # 颜色常量与解析缓存
 │       │   │   ├── CountdownTheme.kt         # Compose 主题
 │       │   │   ├── ListExtensions.kt         # 不可变列表操作辅助函数
-│       │   │   └── CountdownWidget.kt        # Glance 桌面小组件
+│       │   │   ├── CountdownWidget.kt        # Glance 桌面小组件
+│       │   │   ├── CountdownApplication.kt    # Application 入口，初始化日志与崩溃捕获
+│       │   │   └── logging/                   # 日志模块（AppLog/FileLogWriter/CrashHandler/LogExporter）
 │       │   └── res/                      # 图标、布局、小组件配置等资源
 │       └── test/                         # JVM 单元测试
 ├── .github/workflows/android.yml         # CI（build + release）

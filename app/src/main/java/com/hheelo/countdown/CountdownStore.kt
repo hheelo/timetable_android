@@ -2,6 +2,7 @@ package com.hheelo.countdown
 
 import android.content.Context
 import android.graphics.Color
+import com.hheelo.countdown.logging.AppLog
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -15,13 +16,20 @@ class CountdownStore(context: Context) {
     private val json = Json { ignoreUnknownKeys = true }
 
     fun loadCustomEvents(): List<CountdownEvent> {
-        if (!preferences.contains(CustomEventsKey)) return defaultCustomEvents()
+        if (!preferences.contains(CustomEventsKey)) {
+            AppLog.i(TAG, "无已存事件，返回默认事件")
+            return defaultCustomEvents()
+        }
 
         val encoded = runCatching { preferences.getString(CustomEventsKey, null) }
-            .onFailure { backupCorruptEvents(null, "stored value is not a string: ${it.safeMessage()}") }
+            .onFailure {
+                AppLog.e(TAG, "读取已存事件失败", it)
+                backupCorruptEvents(null, "stored value is not a string: ${it.safeMessage()}")
+            }
             .getOrNull()
 
         if (encoded.isNullOrBlank()) {
+            AppLog.w(TAG, "已存事件为空，已备份并返回空列表")
             backupCorruptEvents(encoded, "stored value is empty")
             return emptyList()
         }
@@ -29,16 +37,26 @@ class CountdownStore(context: Context) {
         val decoded = decodeStoredEvents(encoded)
         val normalized = normalized(decoded.events)
         if (decoded.hasInvalidJson || decoded.hasInvalidElements || normalized.hasInvalidFields) {
-            backupCorruptEvents(encoded, corruptionReason(decoded, normalized))
+            val reason = corruptionReason(decoded, normalized)
+            AppLog.w(TAG, "检测到损坏数据，已备份。原因: $reason")
+            backupCorruptEvents(encoded, reason)
         }
 
+        AppLog.i(TAG, "已加载 ${normalized.events.size} 个事件")
         return normalized.events
     }
 
     fun saveCustomEvents(events: List<CountdownEvent>) {
-        preferences.edit()
-            .putString(CustomEventsKey, json.encodeToString(normalized(events).events))
-            .apply()
+        runCatching {
+            preferences.edit()
+                .putString(CustomEventsKey, json.encodeToString(normalized(events).events))
+                .apply()
+        }.onSuccess {
+            AppLog.i(TAG, "已保存 ${events.size} 个事件")
+        }.onFailure {
+            AppLog.e(TAG, "保存事件失败", it)
+            throw it
+        }
     }
 
     private fun defaultCustomEvents(): List<CountdownEvent> {
@@ -164,6 +182,7 @@ class CountdownStore(context: Context) {
     )
 
     companion object {
+        private const val TAG = "CountdownStore"
         private const val CustomEventsKey = "customCountdownEvents"
         private const val CorruptEventsBackupKey = "customCountdownEvents.corruptBackup"
         private const val CorruptEventsReasonKey = "customCountdownEvents.corruptReason"
