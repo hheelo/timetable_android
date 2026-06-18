@@ -31,6 +31,17 @@ object CountdownCalculator {
         )
     }
 
+    fun makePreviewSnapshot(
+        customEvents: List<CountdownEvent>,
+        now: LocalDate = LocalDate.now()
+    ): CountdownSnapshot {
+        return makeSnapshot(
+            customEvents = customEvents,
+            now = now,
+            includeExpiredCustomEvents = true
+        )
+    }
+
     private fun makeSnapshot(
         customEvents: List<CountdownEvent>,
         now: LocalDate,
@@ -102,8 +113,9 @@ object CountdownCalculator {
     private fun makeCustomCard(event: CountdownEvent, now: LocalDate): CountdownCard {
         val target = targetDateFor(event)
         val days = daysBetween(now, target).coerceAtLeast(0)
+        val title = event.title.trim().ifEmpty { "未命名事件" }
         return CountdownCard(
-            title = if (event.isPinned) "置顶 · ${event.title}" else event.title,
+            title = if (event.isPinned) "置顶 · $title" else title,
             subtitle = if (days == 0L) "今天就是目标日" else "你的自定义倒计时",
             days = days,
             iconName = if (event.isPinned) "pin" else "calendar",

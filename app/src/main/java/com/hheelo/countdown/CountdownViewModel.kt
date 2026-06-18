@@ -35,7 +35,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                 withContext(Dispatchers.IO) { store.loadCustomEvents() }
             }.onSuccess { loaded ->
                 events = loaded
-                snapshot = makeCurrentPreviewSnapshot(loaded)
+                snapshot = CountdownCalculator.makePreviewSnapshot(loaded)
             }.onFailure {
                 AppLog.e(TAG, "加载事件失败，使用空列表", it)
             }
@@ -86,35 +86,12 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun refresh() {
-        snapshot = makeCurrentPreviewSnapshot(events)
+        snapshot = CountdownCalculator.makePreviewSnapshot(events)
     }
 
     private fun updateEvents(updated: List<CountdownEvent>) {
         events = updated
         savedMessage = null
-        snapshot = makeCurrentPreviewSnapshot(updated)
-    }
-
-    private fun makeCurrentPreviewSnapshot(events: List<CountdownEvent>): CountdownSnapshot {
-        val now = LocalDate.now()
-        return CountdownSnapshot(
-            generatedAt = now,
-            cards = CountdownCalculator.makeDefaultCards(now) + events.map { makePreviewCard(it, now) }
-        )
-    }
-
-    private fun makePreviewCard(event: CountdownEvent, now: LocalDate): CountdownCard {
-        val days = CountdownCalculator.daysBetween(now, LocalDate.parse(event.targetDate)).coerceAtLeast(0)
-        val title = event.title.trim().ifEmpty { "未命名事件" }
-        return CountdownCard(
-            title = if (event.isPinned) "置顶 · $title" else title,
-            subtitle = if (days == 0L) "今天就是目标日" else "你的自定义倒计时",
-            days = days,
-            iconName = if (event.isPinned) "pin" else "calendar",
-            tintHex = event.colorHex,
-            deepLink = AppDeepLink.eventUrl(event.id),
-            eventId = event.id,
-            isPinned = event.isPinned
-        )
+        snapshot = CountdownCalculator.makePreviewSnapshot(updated)
     }
 }

@@ -11,6 +11,17 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import java.time.Instant
 import java.time.LocalDate
 
+/**
+ * 自定义事件的持久化读写(基于 SharedPreferences）。
+ *
+ * 设计约定，避免被误当成可优化的冗余：
+ * - 本类每次按需新建（ViewModel 初始化一次、小组件每次 provideGlance 一次），
+ *   实例不复用，因此「加内存缓存省去重复 load」在当前架构下没有收益。
+ * - [saveCustomEvents] 与 [loadCustomEvents] 各调用一次 [normalized]，职责不同、并非重复：
+ *   写入侧负责落盘前清洗（trim、补默认色、重排 sortOrder)；
+ *   读取侧负责防御外部篡改 / 旧版本数据,并据此触发损坏备份。
+ *   删除任一侧都会降低健壮性。
+ */
 class CountdownStore(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("countdown_store", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
