@@ -94,10 +94,16 @@ object CountdownCalculator {
             )
         }
 
+        val availableYears = HolidayCalendar.availableYears().sorted()
+        val coverageRange = if (availableYears.isNotEmpty()) {
+            "${availableYears.first()}-${availableYears.last()}"
+        } else {
+            "无"
+        }
         val subtitle = when (lookup.status) {
             HolidayLookupStatus.CURRENT_YEAR_EXHAUSTED_NEXT_YEAR_DATA_MISSING ->
-                "今年假期已过，${now.year + 1} 年数据待更新"
-            else -> "暂无 ${now.year} 年节假日数据"
+                "今年假期已过，${now.year + 1} 年数据待更新（当前覆盖 $coverageRange）"
+            else -> "暂无 ${now.year} 年节假日数据（当前覆盖 $coverageRange）"
         }
         return CountdownCard(
             title = "节假日",
