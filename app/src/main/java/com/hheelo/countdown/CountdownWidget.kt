@@ -39,7 +39,9 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class CountdownWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = CountdownWidget()
@@ -51,18 +53,16 @@ class CountdownWidgetReceiver : GlanceAppWidgetReceiver() {
 
         val appContext = context.applicationContext
         val pendingResult = goAsync()
-        Thread({
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 AppLog.i(TAG, "收到广播 ${intent.action}，开始刷新小组件")
-                runBlocking {
-                    glanceAppWidget.updateAll(appContext)
-                }
+                glanceAppWidget.updateAll(appContext)
             } catch (throwable: Throwable) {
                 AppLog.w(TAG, "刷新小组件失败，action=${intent.action}", throwable)
             } finally {
                 pendingResult.finish()
             }
-        }, "CountdownWidgetRefresh").start()
+        }
     }
 
     private companion object {
