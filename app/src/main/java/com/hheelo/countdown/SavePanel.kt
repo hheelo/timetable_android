@@ -2,8 +2,7 @@ package com.hheelo.countdown
 
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,7 +41,6 @@ internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Uni
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun Footer() {
     val context = LocalContext.current
@@ -62,17 +61,16 @@ internal fun Footer() {
                 "版本 v$it（长按导出日志）",
                 color = countdownColor(CountdownColorHex.TextSecondary),
                 fontSize = 12.sp,
-                modifier = Modifier.combinedClickable(
-                    onClick = {},
-                    onLongClick = {
+                modifier = Modifier.pointerInput(Unit) {
+                    detectTapGestures(onLongPress = {
                         val intent = LogExporter.shareIntent(context)
                         if (intent != null) {
                             context.startActivity(Intent.createChooser(intent, "分享日志"))
                         } else {
                             Toast.makeText(context, "暂无日志可导出", Toast.LENGTH_SHORT).show()
                         }
-                    }
-                )
+                    })
+                }
             )
         }
     }
