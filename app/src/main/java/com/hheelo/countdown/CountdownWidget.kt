@@ -14,6 +14,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -102,7 +103,7 @@ class CountdownWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val store = CountdownStore(context)
-        val snapshot = CountdownCalculator.makeWidgetSnapshot(store)
+        val snapshot = CountdownCalculator.makeWidgetSnapshot(context, store)
         AppLog.d(TAG, "渲染小组件，卡片数=${snapshot.cards.size}")
         provideContent {
             val size = LocalSize.current
@@ -131,6 +132,12 @@ private fun SmallWidget(card: CountdownCard, size: DpSize) {
         size.height < 180.dp -> 20.dp
         else -> 32.dp
     }
+    val context = LocalContext.current
+    val accessibilityText = if (card.days == 0L) {
+        context.getString(R.string.accessibility_today, card.title)
+    } else {
+        context.getString(R.string.accessibility_days_remaining, card.title, card.days)
+    }
 
     Column(
         modifier = GlanceModifier
@@ -139,11 +146,7 @@ private fun SmallWidget(card: CountdownCard, size: DpSize) {
             .padding(padding)
             .clickable(actionStartActivity(deepLinkIntent(card.deepLink)))
             .semantics {
-                contentDescription = if (card.days == 0L) {
-                    "${card.title}，就是今天"
-                } else {
-                    "${card.title}，还有 ${card.days} 天"
-                }
+                contentDescription = accessibilityText
             },
         verticalAlignment = Alignment.Vertical.Top,
         horizontalAlignment = Alignment.Horizontal.Start
@@ -230,6 +233,12 @@ private fun WidgetCard(
         cardHeight >= 104.dp -> 1
         else -> 0
     }
+    val context = LocalContext.current
+    val accessibilityText = if (card.days == 0L) {
+        context.getString(R.string.accessibility_today, card.title)
+    } else {
+        context.getString(R.string.accessibility_days_remaining, card.title, card.days)
+    }
 
     Column(
         modifier = modifier
@@ -237,11 +246,7 @@ private fun WidgetCard(
             .padding(if (compact) 8.dp else 10.dp)
             .clickable(actionStartActivity(deepLinkIntent(card.deepLink)))
             .semantics {
-                contentDescription = if (card.days == 0L) {
-                    "${card.title}，就是今天"
-                } else {
-                    "${card.title}，还有 ${card.days} 天"
-                }
+                contentDescription = accessibilityText
             },
         verticalAlignment = Alignment.Vertical.Top
     ) {

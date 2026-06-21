@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Countdown Days</string>
+
+    <!-- Header -->
+    <string name="header_title">把重要日子放到桌面上</string>
+    <string name="header_subtitle">默认显示周末、最近节假日和多个自定义目标日，支持桌面小组件与置顶排序。</string>
+
+    <!-- Preview cards -->
+    <string name="days_unit">天</string>
+    <string name="accessibility_today">%1$s，就是今天</string>
+    <string name="accessibility_days_remaining">%1$s，还有 %2$d 天</string>
+
+    <!-- Custom editor -->
+    <string name="custom_countdown_title">自定义倒计时</string>
+    <string name="add_button">新增</string>
+    <string name="editor_description">支持配置多个重要日期，小组件会优先展示最近的自定义事件；点桌面小组件可直达对应条目。</string>
+    <string name="event_name_label">事件名称</string>
+    <string name="pin_to_top">置顶显示</string>
+    <string name="move_up">上移</string>
+    <string name="move_down">下移</string>
+    <string name="delete">删除</string>
+    <string name="target_date_button">目标日期 %1$s</string>
+    <string name="empty_state_hint">还没有自定义事件，点右上角"新增"来添加你的第一个倒计时。</string>
+
+    <!-- Save panel -->
+    <string name="save_and_refresh_widget">保存并刷新小组件</string>
+
+    <!-- Footer -->
+    <string name="holiday_info_title">节假日说明</string>
+    <string name="holiday_info_body">当前内置了 2025–2028 年大陆法定节假日数据；自定义倒计时支持多条配置。后续年份可在 HolidayCalendar.kt 中继续追加。</string>
+    <string name="version_with_export_hint">版本 v%1$s（长按导出日志）</string>
+    <string name="share_log">分享日志</string>
+    <string name="no_log_to_export">暂无日志可导出</string>
+    <string name="log_share_subject">Countdown 日志</string>
+
+    <!-- ViewModel messages -->
+    <string name="save_success_message">已保存并刷新桌面小组件</string>
+    <string name="save_failure_message">保存失败，请重试</string>
+
+    <!-- Default / fallback event names -->
+    <string name="new_goal">新的目标</string>
+    <string name="unnamed_event">未命名事件</string>
+    <string name="default_event_title">产品上线</string>
+
+    <!-- Weekend card -->
+    <string name="weekend_title">周末</string>
+    <string name="weekend_today">今天就是周末</string>
+    <string name="weekend_countdown">距离周末还有</string>
+
+    <!-- Holiday card -->
+    <string name="holiday_title">节假日</string>
+    <string name="holiday_ongoing">正在放假中</string>
+    <string name="holiday_countdown">距离%1$s还有</string>
+    <string name="holiday_year_exhausted">今年假期已过，%1$d 年数据待更新</string>
+    <string name="holiday_no_data">暂无 %1$d 年节假日数据</string>
+
+    <!-- Custom card -->
+    <string name="pinned_prefix">置顶 · %1$s</string>
+    <string name="custom_event_today">今天就是目标日</string>
+    <string name="custom_event_countdown">你的自定义倒计时</string>
+
+    <!-- Holiday names -->
+    <string name="holiday_new_year">元旦</string>
+    <string name="holiday_spring_festival">春节</string>
+    <string name="holiday_qingming">清明</string>
+    <string name="holiday_labor_day">劳动节</string>
+    <string name="holiday_dragon_boat">端午</string>
+    <string name="holiday_mid_autumn">中秋</string>
+    <string name="holiday_national_day">国庆</string>
+    <string name="holiday_national_day_mid_autumn">国庆+中秋</string>
+</resources>

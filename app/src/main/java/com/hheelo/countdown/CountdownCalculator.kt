@@ -1,30 +1,35 @@
 package com.hheelo.countdown
 
+import android.content.Context
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 object CountdownCalculator {
-    fun makeSnapshot(store: CountdownStore, now: LocalDate = LocalDate.now()): CountdownSnapshot {
+    fun makeSnapshot(context: Context, store: CountdownStore, now: LocalDate = LocalDate.now()): CountdownSnapshot {
         return makeSnapshot(
+            context = context,
             customEvents = store.loadCustomEvents(),
             now = now,
             includeExpiredCustomEvents = true
         )
     }
 
-    fun makeWidgetSnapshot(store: CountdownStore, now: LocalDate = LocalDate.now()): CountdownSnapshot {
+    fun makeWidgetSnapshot(context: Context, store: CountdownStore, now: LocalDate = LocalDate.now()): CountdownSnapshot {
         return makeWidgetSnapshot(
+            context = context,
             customEvents = store.loadCustomEvents(),
             now = now
         )
     }
 
     fun makeWidgetSnapshot(
+        context: Context,
         customEvents: List<CountdownEvent>,
         now: LocalDate = LocalDate.now()
     ): CountdownSnapshot {
         return makeSnapshot(
+            context = context,
             customEvents = customEvents,
             now = now,
             includeExpiredCustomEvents = false
@@ -32,10 +37,12 @@ object CountdownCalculator {
     }
 
     fun makePreviewSnapshot(
+        context: Context,
         customEvents: List<CountdownEvent>,
         now: LocalDate = LocalDate.now()
     ): CountdownSnapshot {
         return makeSnapshot(
+            context = context,
             customEvents = customEvents,
             now = now,
             includeExpiredCustomEvents = true
@@ -43,33 +50,34 @@ object CountdownCalculator {
     }
 
     private fun makeSnapshot(
+        context: Context,
         customEvents: List<CountdownEvent>,
         now: LocalDate,
         includeExpiredCustomEvents: Boolean
     ): CountdownSnapshot {
         val customCards = customEvents
             .filter { includeExpiredCustomEvents || !targetDateFor(it).isBefore(now) }
-            .map { makeCustomCard(it, now) }
+            .map { makeCustomCard(context, it, now) }
         return CountdownSnapshot(
             generatedAt = now,
-            cards = makeDefaultCards(now) + customCards
+            cards = makeDefaultCards(context, now) + customCards
         )
     }
 
-    fun makeDefaultCards(now: LocalDate = LocalDate.now()): List<CountdownCard> {
-        return listOf(makeWeekendCard(now), makeHolidayCard(now))
+    fun makeDefaultCards(context: Context, now: LocalDate = LocalDate.now()): List<CountdownCard> {
+        return listOf(makeWeekendCard(context, now), makeHolidayCard(context, now))
     }
 
     fun daysBetween(from: LocalDate, to: LocalDate): Long {
         return ChronoUnit.DAYS.between(from, to)
     }
 
-    private fun makeWeekendCard(now: LocalDate): CountdownCard {
+    private fun makeWeekendCard(context: Context, now: LocalDate): CountdownCard {
         val target = nextWeekendStart(now)
         val days = daysBetween(now, target).coerceAtLeast(0)
         return CountdownCard(
-            title = "周末",
-            subtitle = if (days == 0L) "今天就是周末" else "距离周末还有",
+            title = context.getString(R.string.weekend_title),
+            subtitle = if (days == 0L) context.getString(R.string.weekend_today) else context.getString(R.string.weekend_countdown),
             days = days,
             iconName = "weekend",
             tintHex = CountdownColorHex.Weekend,
@@ -78,14 +86,14 @@ object CountdownCalculator {
         )
     }
 
-    private fun makeHolidayCard(now: LocalDate): CountdownCard {
-        val lookup = HolidayCalendar.lookup(now)
+    private fun makeHolidayCard(context: Context, now: LocalDate): CountdownCard {
+        val lookup = HolidayCalendar.lookup(context, now)
         val holiday = lookup.upcomingHoliday
         if (lookup.status == HolidayLookupStatus.UPCOMING_FOUND && holiday != null) {
             val days = daysBetween(now, holiday.start).coerceAtLeast(0)
             return CountdownCard(
                 title = holiday.name,
-                subtitle = if (!now.isBefore(holiday.start)) "正在放假中" else "距离${holiday.name}还有",
+                subtitle = if (!now.isBefore(holiday.start)) context.getString(R.string.holiday_ongoing) else context.getString(R.string.holiday_countdown, holiday.name),
                 days = days,
                 iconName = "holiday",
                 tintHex = CountdownColorHex.Holiday,
@@ -94,19 +102,13 @@ object CountdownCalculator {
             )
         }
 
-        val availableYears = HolidayCalendar.availableYears().sorted()
-        val coverageRange = if (availableYears.isNotEmpty()) {
-            "${availableYears.first()}-${availableYears.last()}"
-        } else {
-            "无"
-        }
         val subtitle = when (lookup.status) {
             HolidayLookupStatus.CURRENT_YEAR_EXHAUSTED_NEXT_YEAR_DATA_MISSING ->
-                "今年假期已过，${now.year + 1} 年数据待更新（当前覆盖 $coverageRange）"
-            else -> "暂无 ${now.year} 年节假日数据（当前覆盖 $coverageRange）"
+                context.getString(R.string.holiday_year_exhausted, now.year + 1)
+            else -> context.getString(R.string.holiday_no_data, now.year)
         }
         return CountdownCard(
-            title = "节假日",
+            title = context.getString(R.string.holiday_title),
             subtitle = subtitle,
             days = 0,
             iconName = "holiday",
@@ -116,13 +118,13 @@ object CountdownCalculator {
         )
     }
 
-    private fun makeCustomCard(event: CountdownEvent, now: LocalDate): CountdownCard {
+    private fun makeCustomCard(context: Context, event: CountdownEvent, now: LocalDate): CountdownCard {
         val target = targetDateFor(event)
         val days = daysBetween(now, target).coerceAtLeast(0)
-        val title = event.title.trim().ifEmpty { "未命名事件" }
+        val title = event.title.trim().ifEmpty { context.getString(R.string.unnamed_event) }
         return CountdownCard(
-            title = if (event.isPinned) "置顶 · $title" else title,
-            subtitle = if (days == 0L) "今天就是目标日" else "你的自定义倒计时",
+            title = if (event.isPinned) context.getString(R.string.pinned_prefix, title) else title,
+            subtitle = if (days == 0L) context.getString(R.string.custom_event_today) else context.getString(R.string.custom_event_countdown),
             days = days,
             iconName = if (event.isPinned) "pin" else "calendar",
             tintHex = event.colorHex,

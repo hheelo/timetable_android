@@ -23,7 +23,8 @@ import java.time.LocalDate
  *   删除任一侧都会降低健壮性。
  */
 class CountdownStore(context: Context) {
-    private val preferences = context.applicationContext.getSharedPreferences("countdown_store", Context.MODE_PRIVATE)
+    private val appContext = context.applicationContext
+    private val preferences = appContext.getSharedPreferences("countdown_store", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
 
     fun loadCustomEvents(): List<CountdownEvent> {
@@ -74,7 +75,7 @@ class CountdownStore(context: Context) {
         return normalized(
             listOf(
                 CountdownEvent(
-                    title = "产品上线",
+                    title = appContext.getString(R.string.default_event_title),
                     targetDate = LocalDate.now().plusDays(30).toString(),
                     colorHex = CountdownColorHex.Brand
                 )
@@ -123,7 +124,7 @@ class CountdownStore(context: Context) {
 
                 ValidatedEvent(
                     event = event.copy(
-                        title = event.title.trim().ifEmpty { "未命名事件" },
+                        title = event.title.trim().ifEmpty { appContext.getString(R.string.unnamed_event) },
                         targetDate = targetDate.toString(),
                         colorHex = colorHex,
                         sortOrder = index

@@ -1,11 +1,17 @@
 package com.hheelo.countdown
 
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.time.LocalDate
 
+@RunWith(RobolectricTestRunner::class)
 class CountdownCalculatorTest {
+    private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+
     @Test
     fun daysBetweenAllowsFutureAndPastTargets() {
         val from = LocalDate.of(2026, 6, 12)
@@ -16,11 +22,11 @@ class CountdownCalculatorTest {
 
     @Test
     fun defaultCardsCountDownToNextSaturdayOnWeekdays() {
-        val cards = CountdownCalculator.makeDefaultCards(LocalDate.of(2026, 6, 12))
+        val cards = CountdownCalculator.makeDefaultCards(context, LocalDate.of(2026, 6, 12))
 
         val weekend = cards.first()
-        assertEquals("周末", weekend.title)
-        assertEquals("距离周末还有", weekend.subtitle)
+        assertEquals(context.getString(R.string.weekend_title), weekend.title)
+        assertEquals(context.getString(R.string.weekend_countdown), weekend.subtitle)
         assertEquals(1, weekend.days)
         assertEquals("weekend", weekend.iconName)
         assertEquals(AppDeepLink.HomeUrl, weekend.deepLink)
@@ -28,18 +34,18 @@ class CountdownCalculatorTest {
 
     @Test
     fun weekendCardIsDueTodayOnSaturday() {
-        val weekend = CountdownCalculator.makeDefaultCards(LocalDate.of(2026, 6, 13)).first()
+        val weekend = CountdownCalculator.makeDefaultCards(context, LocalDate.of(2026, 6, 13)).first()
 
-        assertEquals("今天就是周末", weekend.subtitle)
+        assertEquals(context.getString(R.string.weekend_today), weekend.subtitle)
         assertEquals(0, weekend.days)
     }
 
     @Test
     fun holidayCardShowsActiveHolidayWhenTodayIsInHolidayRange() {
-        val holiday = CountdownCalculator.makeDefaultCards(LocalDate.of(2026, 10, 5))[1]
+        val holiday = CountdownCalculator.makeDefaultCards(context, LocalDate.of(2026, 10, 5))[1]
 
-        assertEquals("国庆", holiday.title)
-        assertEquals("正在放假中", holiday.subtitle)
+        assertEquals(context.getString(R.string.holiday_national_day), holiday.title)
+        assertEquals(context.getString(R.string.holiday_ongoing), holiday.subtitle)
         assertEquals(0, holiday.days)
         assertEquals("holiday", holiday.iconName)
         assertEquals(AppDeepLink.HomeUrl, holiday.deepLink)
@@ -47,11 +53,11 @@ class CountdownCalculatorTest {
 
     @Test
     fun holidayCardFallsBackWhenYearHasNoHolidayData() {
-        val holiday = CountdownCalculator.makeDefaultCards(LocalDate.of(2099, 1, 1))[1]
+        val holiday = CountdownCalculator.makeDefaultCards(context, LocalDate.of(2099, 1, 1))[1]
 
-        assertEquals("节假日", holiday.title)
+        assertEquals(context.getString(R.string.holiday_title), holiday.title)
         assertEquals(0L, holiday.days)
-        assertTrue(holiday.subtitle.contains("数据"))
+        assertTrue(holiday.subtitle.contains(context.getString(R.string.holiday_no_data, 2099).substring(0, 2)))
         assertEquals("holiday", holiday.iconName)
         assertEquals(AppDeepLink.HomeUrl, holiday.deepLink)
     }
@@ -59,6 +65,7 @@ class CountdownCalculatorTest {
     @Test
     fun widgetSnapshotSkipsExpiredCustomEvents() {
         val snapshot = CountdownCalculator.makeWidgetSnapshot(
+            context = context,
             customEvents = listOf(
                 CountdownEvent(
                     id = "expired",
@@ -87,6 +94,7 @@ class CountdownCalculatorTest {
     @Test
     fun widgetSnapshotFallsBackToDefaultCardsWhenAllCustomEventsAreExpired() {
         val snapshot = CountdownCalculator.makeWidgetSnapshot(
+            context = context,
             customEvents = listOf(
                 CountdownEvent(
                     id = "expired",

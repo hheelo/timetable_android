@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,15 +49,15 @@ internal fun CustomEditorHeader(onAdd: () -> Unit) {
     val extraColors = LocalCountdownColors.current
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("自定义倒计时", fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.custom_countdown_title), fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary, modifier = Modifier.weight(1f))
             OutlinedButton(onClick = onAdd) {
                 Icon(Icons.Filled.Add, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
-                Text("新增")
+                Text(stringResource(R.string.add_button))
             }
         }
         Text(
-            "支持配置多个重要日期，小组件会优先展示最近的自定义事件；点桌面小组件可直达对应条目。",
+            stringResource(R.string.editor_description),
             color = extraColors.textSecondary,
             fontSize = 13.sp
         )
@@ -92,7 +93,7 @@ internal fun CustomEventEditor(
                     OutlinedTextField(
                         value = event.title,
                         onValueChange = { onChange(event.copy(title = it)) },
-                        label = { Text("事件名称") },
+                        label = { Text(stringResource(R.string.event_name_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -103,20 +104,20 @@ internal fun CustomEventEditor(
                         )
                         Icon(Icons.Filled.PushPin, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("置顶显示", fontSize = 14.sp)
+                        Text(stringResource(R.string.pin_to_top), fontSize = 14.sp)
                     }
                 }
                 Column {
                     IconButton(onClick = onMoveUp, enabled = canMoveUp) {
-                        Icon(Icons.Filled.ArrowUpward, contentDescription = "上移")
+                        Icon(Icons.Filled.ArrowUpward, contentDescription = stringResource(R.string.move_up))
                     }
                     IconButton(onClick = onMoveDown, enabled = canMoveDown) {
-                        Icon(Icons.Filled.ArrowDownward, contentDescription = "下移")
+                        Icon(Icons.Filled.ArrowDownward, contentDescription = stringResource(R.string.move_down))
                     }
                     IconButton(onClick = onDelete) {
                         Icon(
                             Icons.Filled.Delete,
-                            contentDescription = "删除",
+                            contentDescription = stringResource(R.string.delete),
                             tint = countdownColor(CountdownColorHex.Danger)
                         )
                     }
@@ -139,7 +140,7 @@ internal fun CustomEventEditor(
             ) {
                 Icon(Icons.Filled.CalendarMonth, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("目标日期 ${targetDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}")
+                Text(stringResource(R.string.target_date_button, targetDate.format(DateTimeFormatter.ISO_LOCAL_DATE)))
             }
 
             ColorSwatchPicker(selectedHex = event.colorHex) { onChange(event.copy(colorHex = it)) }
@@ -178,7 +179,7 @@ internal fun EmptyState() {
         color = extraColors.cardSurface
     ) {
         Text(
-            "还没有自定义事件，点右上角“新增”来添加你的第一个倒计时。",
+            stringResource(R.string.empty_state_hint),
             modifier = Modifier.padding(18.dp),
             color = extraColors.textSecondary
         )

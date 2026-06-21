@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -37,13 +38,13 @@ internal fun Header() {
     val extraColors = LocalCountdownColors.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            "把重要日子放到桌面上",
+            stringResource(R.string.header_title),
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
             color = extraColors.textPrimary
         )
         Text(
-            "默认显示周末、最近节假日和多个自定义目标日，支持桌面小组件与置顶排序。",
+            stringResource(R.string.header_subtitle),
             color = extraColors.textSecondary,
             fontSize = 14.sp
         )
@@ -78,18 +79,19 @@ private fun CountdownCardRow(card: CountdownCard) {
                 Text(card.title, fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(card.subtitle, color = extraColors.textSecondary, fontSize = 12.sp)
             }
+            val cardAccessibility = if (card.days == 0L) {
+                stringResource(R.string.accessibility_today, card.title)
+            } else {
+                stringResource(R.string.accessibility_days_remaining, card.title, card.days)
+            }
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier.semantics(mergeDescendants = true) {
-                    contentDescription = if (card.days == 0L) {
-                        "${card.title}，就是今天"
-                    } else {
-                        "${card.title}，还有 ${card.days} 天"
-                    }
+                    contentDescription = cardAccessibility
                 }
             ) {
                 Text(card.days.toString(), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = extraColors.textPrimary)
-                Text("天", color = extraColors.textSecondary, fontSize = 12.sp)
+                Text(stringResource(R.string.days_unit), color = extraColors.textSecondary, fontSize = 12.sp)
             }
         }
     }

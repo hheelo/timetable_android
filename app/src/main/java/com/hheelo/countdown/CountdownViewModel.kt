@@ -18,12 +18,13 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         const val TAG = "CountdownViewModel"
     }
 
+    private val ctx = application.applicationContext
     private val store = CountdownStore(application)
 
     var events by mutableStateOf<List<CountdownEvent>>(emptyList())
         private set
 
-    var snapshot by mutableStateOf(CountdownSnapshot(LocalDate.now(), CountdownCalculator.makeDefaultCards()))
+    var snapshot by mutableStateOf(CountdownSnapshot(LocalDate.now(), CountdownCalculator.makeDefaultCards(application)))
         private set
 
     var savedMessage by mutableStateOf<String?>(null)
@@ -35,7 +36,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                 withContext(Dispatchers.IO) { store.loadCustomEvents() }
             }.onSuccess { loaded ->
                 events = loaded
-                snapshot = CountdownCalculator.makePreviewSnapshot(loaded)
+                snapshot = CountdownCalculator.makePreviewSnapshot(ctx, loaded)
             }.onFailure {
                 AppLog.e(TAG, "加载事件失败，使用空列表", it)
             }
@@ -44,7 +45,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun add() {
         val offset = 7L * (events.size + 1)
-        updateEvents(events + CountdownEvent.empty(offset))
+        updateEvents(events + CountdownEvent.empty(getApplication(), offset))
     }
 
     fun update(index: Int, updated: CountdownEvent) {
@@ -69,7 +70,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun save() {
         val current = events
-        savedMessage = "已保存并刷新桌面小组件"
+        savedMessage = getApplication<Application>().getString(R.string.save_success_message)
         viewModelScope.launch {
             runCatching {
                 withContext(Dispatchers.IO) {
@@ -80,18 +81,18 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                 AppLog.i(TAG, "保存并刷新小组件完成，共 ${current.size} 个事件")
             }.onFailure {
                 AppLog.e(TAG, "保存或刷新小组件失败", it)
-                savedMessage = "保存失败，请重试"
+                savedMessage = getApplication<Application>().getString(R.string.save_failure_message)
             }
         }
     }
 
     fun refresh() {
-        snapshot = CountdownCalculator.makePreviewSnapshot(events)
+        snapshot = CountdownCalculator.makePreviewSnapshot(ctx, events)
     }
 
     private fun updateEvents(updated: List<CountdownEvent>) {
         events = updated
         savedMessage = null
-        snapshot = CountdownCalculator.makePreviewSnapshot(updated)
+        snapshot = CountdownCalculator.makePreviewSnapshot(ctx, updated)
     }
 }

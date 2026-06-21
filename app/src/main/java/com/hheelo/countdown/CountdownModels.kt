@@ -1,5 +1,6 @@
 package com.hheelo.countdown
 
+import android.content.Context
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.util.UUID
@@ -14,9 +15,9 @@ data class CountdownEvent(
     val sortOrder: Int = 0
 ) {
     companion object {
-        fun empty(offsetDays: Long = 30): CountdownEvent {
+        fun empty(context: Context, offsetDays: Long = 30): CountdownEvent {
             return CountdownEvent(
-                title = "新的目标",
+                title = context.getString(R.string.new_goal),
                 targetDate = LocalDate.now().plusDays(offsetDays).toString()
             )
         }

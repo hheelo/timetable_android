@@ -3,6 +3,7 @@ package com.hheelo.countdown.logging
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
+import com.hheelo.countdown.R
 import java.io.File
 
 /**
@@ -33,7 +34,7 @@ object LogExporter {
             Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "Countdown 日志")
+                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.log_share_subject))
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         }.onFailure { AppLog.e(TAG, "导出日志失败", it) }.getOrNull()

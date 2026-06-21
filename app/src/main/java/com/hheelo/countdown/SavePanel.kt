@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,7 +37,7 @@ internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Uni
         ) {
             Icon(Icons.Filled.Save, contentDescription = null)
             Spacer(Modifier.width(8.dp))
-            Text("保存并刷新小组件")
+            Text(stringResource(R.string.save_and_refresh_widget))
         }
         savedMessage?.let { Text(it, color = extraColors.success, fontSize = 13.sp) }
     }
@@ -52,24 +53,24 @@ internal fun Footer() {
         }.getOrNull()
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-        Text("节假日说明", fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary)
+        Text(stringResource(R.string.holiday_info_title), fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary)
         Text(
-            "当前内置了 2026 年大陆法定节假日数据；自定义倒计时支持多条配置。后续年份可在 HolidayCalendar.kt 中继续追加。",
+            stringResource(R.string.holiday_info_body),
             color = extraColors.textSecondary,
             fontSize = 13.sp
         )
         versionName?.let {
             Text(
-                "版本 v$it（长按导出日志）",
+                stringResource(R.string.version_with_export_hint, it),
                 color = extraColors.textSecondary,
                 fontSize = 12.sp,
                 modifier = Modifier.pointerInput(Unit) {
                     detectTapGestures(onLongPress = {
                         val intent = LogExporter.shareIntent(context)
                         if (intent != null) {
-                            context.startActivity(Intent.createChooser(intent, "分享日志"))
+                            context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_log)))
                         } else {
-                            Toast.makeText(context, "暂无日志可导出", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.no_log_to_export), Toast.LENGTH_SHORT).show()
                         }
                     })
                 }
