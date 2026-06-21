@@ -21,6 +21,14 @@ object CountdownColorHex {
     const val WidgetTitle = "#E6FFFFFF"
     const val WidgetSubtitle = "#9EFFFFFF"
 
+    // Dark mode equivalents
+    const val DarkTextPrimary = "#F9FAFB"
+    const val DarkTextSecondary = "#9CA3AF"
+    const val DarkBackgroundStart = "#1C1917"
+    const val DarkBackgroundMiddle = "#1A1513"
+    const val DarkBackgroundEnd = "#14201A"
+    const val DarkSuccess = "#34D399"
+
     val eventSwatches = listOf(Brand, "#F59E0B", AccentGreen, "#3B82F6", "#8B5CF6")
 }
 

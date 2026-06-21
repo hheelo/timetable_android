@@ -45,9 +45,10 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 internal fun CustomEditorHeader(onAdd: () -> Unit) {
+    val extraColors = LocalCountdownColors.current
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("自定义倒计时", fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            Text("自定义倒计时", fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary, modifier = Modifier.weight(1f))
             OutlinedButton(onClick = onAdd) {
                 Icon(Icons.Filled.Add, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
@@ -56,7 +57,7 @@ internal fun CustomEditorHeader(onAdd: () -> Unit) {
         }
         Text(
             "支持配置多个重要日期，小组件会优先展示最近的自定义事件；点桌面小组件可直达对应条目。",
-            color = countdownColor(CountdownColorHex.TextSecondary),
+            color = extraColors.textSecondary,
             fontSize = 13.sp
         )
     }
@@ -74,6 +75,7 @@ internal fun CustomEventEditor(
     onMoveDown: () -> Unit
 ) {
     val context = LocalContext.current
+    val extraColors = LocalCountdownColors.current
     val targetDate = LocalDate.parse(event.targetDate)
     val borderColor = if (highlighted) countdownColor(event.colorHex) else Color.Transparent
 
@@ -82,7 +84,7 @@ internal fun CustomEventEditor(
             .fillMaxWidth()
             .border(2.dp, borderColor, RoundedCornerShape(8.dp)),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.86f))
+        colors = CardDefaults.cardColors(containerColor = extraColors.cardSurface)
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.Top) {
@@ -147,6 +149,7 @@ internal fun CustomEventEditor(
 
 @Composable
 private fun ColorSwatchPicker(selectedHex: String, onSelect: (String) -> Unit) {
+    val extraColors = LocalCountdownColors.current
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         CountdownColorHex.eventSwatches.forEach { hex ->
             Box(
@@ -154,7 +157,7 @@ private fun ColorSwatchPicker(selectedHex: String, onSelect: (String) -> Unit) {
                     .size(30.dp)
                     .clip(CircleShape)
                     .background(countdownColor(hex))
-                    .border(if (selectedHex == hex) 3.dp else 0.dp, Color.White, CircleShape)
+                    .border(if (selectedHex == hex) 3.dp else 0.dp, extraColors.swatchBorder, CircleShape)
                     .clickable { onSelect(hex) },
                 contentAlignment = Alignment.Center
             ) {
@@ -168,15 +171,16 @@ private fun ColorSwatchPicker(selectedHex: String, onSelect: (String) -> Unit) {
 
 @Composable
 internal fun EmptyState() {
+    val extraColors = LocalCountdownColors.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        color = Color.White.copy(alpha = 0.72f)
+        color = extraColors.cardSurface
     ) {
         Text(
             "还没有自定义事件，点右上角“新增”来添加你的第一个倒计时。",
             modifier = Modifier.padding(18.dp),
-            color = countdownColor(CountdownColorHex.TextSecondary)
+            color = extraColors.textSecondary
         )
     }
 }

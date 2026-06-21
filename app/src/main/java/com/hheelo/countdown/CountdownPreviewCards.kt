@@ -34,16 +34,17 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 internal fun Header() {
+    val extraColors = LocalCountdownColors.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             "把重要日子放到桌面上",
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
-            color = countdownColor(CountdownColorHex.TextPrimary)
+            color = extraColors.textPrimary
         )
         Text(
             "默认显示周末、最近节假日和多个自定义目标日，支持桌面小组件与置顶排序。",
-            color = countdownColor(CountdownColorHex.TextSecondary),
+            color = extraColors.textSecondary,
             fontSize = 14.sp
         )
     }
@@ -60,10 +61,11 @@ internal fun PreviewCards(cards: List<CountdownCard>) {
 
 @Composable
 private fun CountdownCardRow(card: CountdownCard) {
+    val extraColors = LocalCountdownColors.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.78f)),
+        colors = CardDefaults.cardColors(containerColor = extraColors.cardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
@@ -73,8 +75,8 @@ private fun CountdownCardRow(card: CountdownCard) {
             IconBubble(card.iconName, countdownColor(card.tintHex))
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text(card.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(card.subtitle, color = countdownColor(CountdownColorHex.TextSecondary), fontSize = 12.sp)
+                Text(card.title, fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(card.subtitle, color = extraColors.textSecondary, fontSize = 12.sp)
             }
             Column(
                 horizontalAlignment = Alignment.End,
@@ -86,8 +88,8 @@ private fun CountdownCardRow(card: CountdownCard) {
                     }
                 }
             ) {
-                Text(card.days.toString(), fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Text("天", color = countdownColor(CountdownColorHex.TextSecondary), fontSize = 12.sp)
+                Text(card.days.toString(), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = extraColors.textPrimary)
+                Text("天", color = extraColors.textSecondary, fontSize = 12.sp)
             }
         }
     }
@@ -95,6 +97,7 @@ private fun CountdownCardRow(card: CountdownCard) {
 
 @Composable
 private fun IconBubble(iconName: String, tint: Color) {
+    val extraColors = LocalCountdownColors.current
     val icon = when (iconName) {
         "weekend" -> Icons.Filled.WbSunny
         "holiday" -> Icons.Filled.Event
@@ -105,7 +108,7 @@ private fun IconBubble(iconName: String, tint: Color) {
         modifier = Modifier
             .size(44.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.White.copy(alpha = 0.85f)),
+            .background(extraColors.iconBubble),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = null, tint = tint)
