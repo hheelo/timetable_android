@@ -27,6 +27,7 @@ import com.hheelo.countdown.logging.LogExporter
 
 @Composable
 internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Unit) {
+    val extraColors = LocalCountdownColors.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
             onClick = onSave,
@@ -37,7 +38,7 @@ internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Uni
             Spacer(Modifier.width(8.dp))
             Text("保存并刷新小组件")
         }
-        savedMessage?.let { Text(it, color = countdownColor(CountdownColorHex.Success), fontSize = 13.sp) }
+        savedMessage?.let { Text(it, color = extraColors.success, fontSize = 13.sp) }
     }
 }
 
@@ -45,22 +46,23 @@ internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Uni
 @Composable
 internal fun Footer() {
     val context = LocalContext.current
+    val extraColors = LocalCountdownColors.current
     val versionName = remember {
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
         }.getOrNull()
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-        Text("节假日说明", fontWeight = FontWeight.SemiBold)
+        Text("节假日说明", fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary)
         Text(
             "当前内置了 2026 年大陆法定节假日数据；自定义倒计时支持多条配置。后续年份可在 HolidayCalendar.kt 中继续追加。",
-            color = countdownColor(CountdownColorHex.TextSecondary),
+            color = extraColors.textSecondary,
             fontSize = 13.sp
         )
         versionName?.let {
             Text(
                 "版本 v$it（长按导出日志）",
-                color = countdownColor(CountdownColorHex.TextSecondary),
+                color = extraColors.textSecondary,
                 fontSize = 12.sp,
                 modifier = Modifier.combinedClickable(
                     onClick = {},

@@ -51,6 +51,7 @@ internal fun CountdownApp(
     }
 
     Scaffold { paddingValues ->
+        val extraColors = LocalCountdownColors.current
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -58,9 +59,9 @@ internal fun CountdownApp(
                 .background(
                     Brush.linearGradient(
                         listOf(
-                            countdownColor(CountdownColorHex.BackgroundStart),
-                            countdownColor(CountdownColorHex.BackgroundMiddle),
-                            countdownColor(CountdownColorHex.BackgroundEnd)
+                            extraColors.backgroundStart,
+                            extraColors.backgroundMiddle,
+                            extraColors.backgroundEnd
                         )
                     )
                 )
