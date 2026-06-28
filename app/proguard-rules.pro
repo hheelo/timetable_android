@@ -11,7 +11,7 @@
 -keepclassmembers class com.hheelo.countdown.CountdownEvent {
     *** Companion;
 }
--keepclasseswithmembers class com.hheelo.countdown.CountdownEvent$ serializer {
+-keepclasseswithmembers class com.hheelo.countdown.CountdownEvent$$serializer {
     *;
 }
 
