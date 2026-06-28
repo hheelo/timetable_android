@@ -135,7 +135,7 @@ class CountdownStore(context: Context) {
             .filterNotNull()
             .sortedWith(
                 compareByDescending<ValidatedEvent> { it.event.isPinned }
-                    .thenBy { it.event.sortOrder }
+                    .thenBy { if (it.event.isPinned) it.event.sortOrder else Int.MAX_VALUE }
                     .thenBy { it.targetDate }
             )
             .map { it.event }
