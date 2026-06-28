@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -32,6 +34,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,7 +83,7 @@ internal fun CustomEventEditor(
 ) {
     val context = LocalContext.current
     val extraColors = LocalCountdownColors.current
-    val targetDate = LocalDate.parse(event.targetDate)
+    val targetDate = runCatching { LocalDate.parse(event.targetDate) }.getOrDefault(LocalDate.now())
     val borderColor = if (highlighted) countdownColor(event.colorHex) else Color.Transparent
 
     Card(
@@ -106,6 +112,7 @@ internal fun CustomEventEditor(
                         Spacer(Modifier.width(6.dp))
                         Text(stringResource(R.string.pin_to_top), fontSize = 14.sp)
                     }
+                    ReminderRow(event = event, onChange = onChange)
                 }
                 Column {
                     IconButton(onClick = onMoveUp, enabled = canMoveUp) {
@@ -144,6 +151,49 @@ internal fun CustomEventEditor(
             }
 
             ColorSwatchPicker(selectedHex = event.colorHex) { onChange(event.copy(colorHex = it)) }
+        }
+    }
+}
+
+@Composable
+private fun ReminderRow(event: CountdownEvent, onChange: (CountdownEvent) -> Unit) {
+    val reminderOptions = listOf(
+        0 to R.string.reminder_day_of,
+        1 to R.string.reminder_days_before_1,
+        3 to R.string.reminder_days_before_3,
+        7 to R.string.reminder_days_before_7
+    )
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(
+            checked = event.reminderEnabled,
+            onCheckedChange = { onChange(event.copy(reminderEnabled = it)) }
+        )
+        Text(stringResource(R.string.reminder_label), fontSize = 14.sp)
+
+        if (event.reminderEnabled) {
+            Spacer(Modifier.width(12.dp))
+            var expanded by remember { mutableStateOf(false) }
+            val selectedLabel = reminderOptions
+                .firstOrNull { it.first == event.reminderDaysBefore }
+                ?.second ?: R.string.reminder_days_before_1
+
+            Box {
+                OutlinedButton(onClick = { expanded = true }) {
+                    Text(stringResource(selectedLabel))
+                }
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    reminderOptions.forEach { (days, labelRes) ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(labelRes)) },
+                            onClick = {
+                                onChange(event.copy(reminderDaysBefore = days))
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

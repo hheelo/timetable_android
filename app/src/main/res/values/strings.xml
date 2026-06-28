@@ -21,6 +21,10 @@
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
     <string name="delete">删除</string>
+    <string name="delete_confirm_title">确认删除</string>
+    <string name="delete_confirm_message">确定要删除这个事件吗？</string>
+    <string name="delete_confirm_button">删除</string>
+    <string name="delete_cancel_button">取消</string>
     <string name="target_date_button">目标日期 %1$s</string>
     <string name="empty_state_hint">还没有自定义事件，点右上角"新增"来添加你的第一个倒计时。</string>
 
@@ -29,7 +33,7 @@
 
     <!-- Footer -->
     <string name="holiday_info_title">节假日说明</string>
-    <string name="holiday_info_body">当前内置了 2025–2028 年大陆法定节假日数据；自定义倒计时支持多条配置。后续年份可在 HolidayCalendar.kt 中继续追加。</string>
+    <string name="holiday_info_body">当前内置了 2025–2028 年大陆法定节假日官方数据；2029 年起使用预估日期（标注"预估"），届时国务院公布后会更新为准确数据。</string>
     <string name="version_with_export_hint">版本 v%1$s（长按导出日志）</string>
     <string name="share_log">分享日志</string>
     <string name="no_log_to_export">暂无日志可导出</string>
@@ -61,6 +65,17 @@
     <string name="custom_event_today">今天就是目标日</string>
     <string name="custom_event_countdown">你的自定义倒计时</string>
 
+    <!-- Reminder -->
+    <string name="reminder_label">提醒</string>
+    <string name="reminder_day_of">当天</string>
+    <string name="reminder_days_before_1">前1天</string>
+    <string name="reminder_days_before_3">前3天</string>
+    <string name="reminder_days_before_7">前7天</string>
+    <string name="reminder_notification_title">倒计时提醒</string>
+    <string name="reminder_notification_channel">事件提醒</string>
+    <string name="reminder_notification_text">「%1$s」还有%2$d天</string>
+    <string name="reminder_notification_today">「%1$s」就是今天！</string>
+
     <!-- Holiday names -->
     <string name="holiday_new_year">元旦</string>
     <string name="holiday_spring_festival">春节</string>
@@ -70,4 +85,5 @@
     <string name="holiday_mid_autumn">中秋</string>
     <string name="holiday_national_day">国庆</string>
     <string name="holiday_national_day_mid_autumn">国庆+中秋</string>
+    <string name="holiday_estimated">（预估）</string>
 </resources>

@@ -6,9 +6,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.time.LocalDate
 
 @RunWith(RobolectricTestRunner::class)
+@Config(application = android.app.Application::class)
 class CountdownCalculatorTest {
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
 
@@ -52,12 +54,10 @@ class CountdownCalculatorTest {
     }
 
     @Test
-    fun holidayCardFallsBackWhenYearHasNoHolidayData() {
+    fun holidayCardUsesEstimationForFarFutureYear() {
         val holiday = CountdownCalculator.makeDefaultCards(context, LocalDate.of(2099, 1, 1))[1]
 
-        assertEquals(context.getString(R.string.holiday_title), holiday.title)
-        assertEquals(0L, holiday.days)
-        assertTrue(holiday.subtitle.contains(context.getString(R.string.holiday_no_data, 2099).substring(0, 2)))
+        assertTrue(holiday.title.contains("预估"))
         assertEquals("holiday", holiday.iconName)
         assertEquals(AppDeepLink.HomeUrl, holiday.deepLink)
     }

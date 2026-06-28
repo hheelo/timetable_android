@@ -135,7 +135,7 @@ object CountdownCalculator {
     }
 
     private fun targetDateFor(event: CountdownEvent): LocalDate {
-        return LocalDate.parse(event.targetDate)
+        return runCatching { LocalDate.parse(event.targetDate) }.getOrDefault(LocalDate.now())
     }
 
     private fun nextWeekendStart(now: LocalDate): LocalDate {

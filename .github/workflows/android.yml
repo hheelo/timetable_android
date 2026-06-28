@@ -108,14 +108,14 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
+      - name: Build release APK
+        run: ./gradlew assembleRelease
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk timetable-android-${{ github.ref_name }}-debug.apk
+        run: cp app/build/outputs/apk/release/app-release-unsigned.apk timetable-android-${{ github.ref_name }}-release.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
-          files: timetable-android-${{ github.ref_name }}-debug.apk
+          files: timetable-android-${{ github.ref_name }}-release.apk
           generate_release_notes: true

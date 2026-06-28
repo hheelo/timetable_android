@@ -12,7 +12,9 @@ data class CountdownEvent(
     val targetDate: String,
     val colorHex: String = CountdownColorHex.Brand,
     val isPinned: Boolean = false,
-    val sortOrder: Int = 0
+    val sortOrder: Int = 0,
+    val reminderEnabled: Boolean = false,
+    val reminderDaysBefore: Int = 1
 ) {
     companion object {
         fun empty(context: Context, offsetDays: Long = 30): CountdownEvent {

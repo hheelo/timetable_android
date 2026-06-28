@@ -7,9 +7,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.time.LocalDate
 
 @RunWith(RobolectricTestRunner::class)
+@Config(application = android.app.Application::class)
 class HolidayCalendarTest {
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
 
@@ -44,25 +46,29 @@ class HolidayCalendarTest {
     }
 
     @Test
-    fun lookupReportsWhenCurrentYearIsExhaustedAndNextYearIsMissing() {
+    fun lookupFindsEstimatedHolidayWhenCurrentYearExhaustedAndNextYearIsEstimated() {
         val result = HolidayCalendar.lookup(context, LocalDate.of(2028, 10, 9))
 
-        assertNull(result.upcomingHoliday)
-        assertEquals(HolidayLookupStatus.CURRENT_YEAR_EXHAUSTED_NEXT_YEAR_DATA_MISSING, result.status)
-        assertEquals(listOf(2028, 2029), result.checkedYears)
-        assertEquals(listOf(2028), result.availableYears)
-        assertEquals(listOf(2029), result.missingYears)
+        assertEquals(HolidayLookupStatus.UPCOMING_FOUND, result.status)
+        val estimated = context.getString(R.string.holiday_estimated)
+        assertEquals(
+            context.getString(R.string.holiday_new_year) + estimated,
+            result.upcomingHoliday?.name
+        )
+        assertEquals(LocalDate.of(2029, 1, 1), result.upcomingHoliday?.start)
     }
 
     @Test
-    fun lookupReportsMissingCurrentYearWhenNoCheckedYearHasData() {
+    fun lookupFindsEstimatedHolidayForYearBeyondHardcodedData() {
         val result = HolidayCalendar.lookup(context, LocalDate.of(2029, 1, 1))
 
-        assertNull(result.upcomingHoliday)
-        assertEquals(HolidayLookupStatus.CURRENT_YEAR_DATA_MISSING, result.status)
-        assertEquals(listOf(2029, 2030), result.checkedYears)
-        assertEquals(emptyList<Int>(), result.availableYears)
-        assertEquals(listOf(2029, 2030), result.missingYears)
+        assertEquals(HolidayLookupStatus.UPCOMING_FOUND, result.status)
+        val estimated = context.getString(R.string.holiday_estimated)
+        assertEquals(
+            context.getString(R.string.holiday_new_year) + estimated,
+            result.upcomingHoliday?.name
+        )
+        assertEquals(LocalDate.of(2029, 1, 1), result.upcomingHoliday?.start)
     }
 
     // --- 2025 data tests ---
@@ -177,5 +183,58 @@ class HolidayCalendarTest {
         assertEquals(7, HolidayCalendar.holidayRanges(context,2026).size)
         assertEquals(7, HolidayCalendar.holidayRanges(context,2027).size)
         assertEquals(6, HolidayCalendar.holidayRanges(context,2028).size)
+    }
+
+    // --- Estimated holiday tests ---
+
+    @Test
+    fun estimatedHolidaysForYearReturnsSevenHolidays() {
+        val holidays = HolidayCalendar.estimateHolidaysForYear(context, 2029)
+        assertEquals(7, holidays.size)
+    }
+
+    @Test
+    fun estimatedSpringFestival2029UsesLunarData() {
+        val holidays = HolidayCalendar.estimateHolidaysForYear(context, 2029)
+        val springFestival = holidays.first {
+            it.name.contains(context.getString(R.string.holiday_spring_festival))
+        }
+        assertEquals(LocalDate.of(2029, 1, 13), springFestival.start)
+        assertEquals(LocalDate.of(2029, 1, 19), springFestival.end)
+    }
+
+    @Test
+    fun estimatedDragonBoat2031UsesLunarData() {
+        val holidays = HolidayCalendar.estimateHolidaysForYear(context, 2031)
+        val dragonBoat = holidays.first {
+            it.name.contains(context.getString(R.string.holiday_dragon_boat))
+        }
+        assertEquals(LocalDate.of(2031, 6, 6), dragonBoat.start)
+        assertEquals(LocalDate.of(2031, 6, 8), dragonBoat.end)
+    }
+
+    @Test
+    fun estimatedHolidaysBeyond2035FallsBackToLastKnownLunarDates() {
+        val holidays = HolidayCalendar.estimateHolidaysForYear(context, 2040)
+        val springFestival = holidays.first {
+            it.name.contains(context.getString(R.string.holiday_spring_festival))
+        }
+        // Falls back to 2035's month/day: Feb 8
+        assertEquals(LocalDate.of(2040, 2, 8), springFestival.start)
+    }
+
+    @Test
+    fun estimatedHolidayNamesContainEstimatedSuffix() {
+        val holidays = HolidayCalendar.estimateHolidaysForYear(context, 2030)
+        val estimated = context.getString(R.string.holiday_estimated)
+        assertTrue(holidays.all { it.name.endsWith(estimated) })
+    }
+
+    @Test
+    fun lookupCrossesYearBoundaryFrom2028To2029WithEstimates() {
+        val result = HolidayCalendar.lookup(context, LocalDate.of(2028, 10, 9))
+
+        assertEquals(HolidayLookupStatus.UPCOMING_FOUND, result.status)
+        assertEquals(LocalDate.of(2029, 1, 1), result.upcomingHoliday?.start)
     }
 }
