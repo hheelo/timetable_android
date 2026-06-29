@@ -48,6 +48,36 @@ open timetable_android
 
 仓库已包含 Gradle wrapper；也可以直接让 Android Studio 同步项目，它会使用 `settings.gradle.kts` 和根目录 `build.gradle.kts` 下载所需插件。
 
+### Release 签名
+
+对外安装或发布请使用已签名 release APK。先生成并妥善保存自己的 release keystore：
+
+```bash
+keytool -genkeypair -v \
+  -keystore release-keystore.jks \
+  -alias timetable \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000
+```
+
+本机构建时，在未提交的 `local.properties` 中加入：
+
+```properties
+RELEASE_STORE_FILE=/absolute/path/to/release-keystore.jks
+RELEASE_STORE_PASSWORD=your-store-password
+RELEASE_KEY_ALIAS=timetable
+RELEASE_KEY_PASSWORD=your-key-password
+```
+
+然后执行：
+
+```bash
+./gradlew assembleRelease
+```
+
+产物位于 `app/build/outputs/apk/release/app-release.apk`。如果没有配置上述 4 个签名字段，release 构建会失败，避免产出无法正常安装的 `unsigned` APK。
+
 ## CI
 
 GitHub Actions workflow 位于 `.github/workflows/android.yml`，包含两个任务：
@@ -59,7 +89,14 @@ GitHub Actions workflow 位于 `.github/workflows/android.yml`，包含两个任
   ./gradlew assembleDebug
   ```
 
-- **release**：在推送 `v*` 格式的 tag 时执行，构建 debug APK 并自动创建 GitHub Release，附带 APK 及自动生成的更新日志。
+- **release**：在推送 `v*` 格式的 tag 时执行，构建已签名 release APK 并自动创建 GitHub Release，附带 APK 及自动生成的更新日志。
+
+  GitHub 仓库需要配置以下 Actions Secrets：
+
+  - `RELEASE_KEYSTORE_BASE64`：release keystore 的 Base64 内容。macOS 可用 `base64 -i release-keystore.jks | pbcopy` 复制；Linux 可用 `base64 -w 0 release-keystore.jks` 输出。
+  - `RELEASE_STORE_PASSWORD`
+  - `RELEASE_KEY_ALIAS`
+  - `RELEASE_KEY_PASSWORD`
 
 ## 发布新版本
 
