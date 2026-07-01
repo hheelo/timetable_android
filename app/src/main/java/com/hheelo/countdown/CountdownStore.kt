@@ -60,9 +60,10 @@ class CountdownStore(context: Context) {
 
     fun saveCustomEvents(events: List<CountdownEvent>) {
         runCatching {
-            preferences.edit()
+            val saved = preferences.edit()
                 .putString(CustomEventsKey, json.encodeToString(normalized(events).events))
-                .apply()
+                .commit()
+            check(saved) { "SharedPreferences commit returned false" }
         }.onSuccess {
             AppLog.i(TAG, "已保存 ${events.size} 个事件")
         }.onFailure {

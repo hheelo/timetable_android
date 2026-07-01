@@ -19,6 +19,10 @@ class CountdownStoreTest {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
+        context.getSharedPreferences("countdown_store", Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .commit()
         store = CountdownStore(context)
     }
 
@@ -280,5 +284,17 @@ class CountdownStoreTest {
         assertEquals(1, loaded.size)
         assertEquals(context.getString(R.string.default_event_title), loaded[0].title)
         assertEquals(CountdownColorHex.Brand, loaded[0].colorHex)
+    }
+
+    @Test
+    fun savedEmptyListDoesNotRestoreDefaultEvent() {
+        val defaultEvents = store.loadCustomEvents()
+        assertEquals(1, defaultEvents.size)
+        assertEquals(context.getString(R.string.default_event_title), defaultEvents[0].title)
+
+        store.saveCustomEvents(emptyList())
+
+        val loaded = CountdownStore(context).loadCustomEvents()
+        assertEquals(emptyList<CountdownEvent>(), loaded)
     }
 }
