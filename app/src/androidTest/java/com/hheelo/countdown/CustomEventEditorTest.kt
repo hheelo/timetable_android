@@ -53,7 +53,7 @@ class CustomEventEditorTest {
         }
 
         composeRule.onNodeWithText(
-            "支持配置多个重要日期，小组件会优先展示最近的自定义事件；点桌面小组件可直达对应条目。"
+            "支持配置多个重要日期，小组件会优先展示最近日期；点桌面小组件可直达对应条目。"
         ).assertIsDisplayed()
     }
 

@@ -15,7 +15,7 @@
     <!-- Custom editor -->
     <string name="custom_countdown_title">自定义倒计时</string>
     <string name="add_button">新增</string>
-    <string name="editor_description">支持配置多个重要日期，小组件会优先展示最近的自定义事件；点桌面小组件可直达对应条目。</string>
+    <string name="editor_description">支持配置多个重要日期，小组件会优先展示最近日期；点桌面小组件可直达对应条目。</string>
     <string name="event_name_label">事件名称</string>
     <string name="pin_to_top">置顶显示</string>
     <string name="move_up">上移</string>

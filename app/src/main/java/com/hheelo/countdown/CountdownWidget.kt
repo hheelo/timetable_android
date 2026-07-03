@@ -331,10 +331,10 @@ private fun overviewPadding(size: DpSize): Dp {
     return if (size.height < 180.dp || size.width < 260.dp) 12.dp else 14.dp
 }
 
-private fun List<CountdownCard>.sortedForWidget(): List<CountdownCard> {
+internal fun List<CountdownCard>.sortedForWidget(): List<CountdownCard> {
     return sortedWith(
-        compareBy<CountdownCard> { it.widgetDisplayPriority() }
-            .thenBy { it.days }
+        compareBy<CountdownCard> { it.days }
+            .thenBy { it.widgetDisplayPriority() }
             .thenBy { it.title }
     )
 }
