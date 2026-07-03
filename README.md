@@ -151,4 +151,4 @@ timetable_android/
 
 ## 节假日数据
 
-节假日数据位于 `app/src/main/java/com/hheelo/countdown/HolidayCalendar.kt`，当前与 iOS 项目一致，内置 2026 年大陆法定节假日。
+节假日数据位于 `app/src/main/java/com/hheelo/countdown/HolidayCalendar.kt`。2025-2028 年大陆法定节假日为官方硬编码数据；2029-2035 年的春节、端午、中秋等农历节日则使用预计算的农历估算日期。当前与 iOS 项目一致。
