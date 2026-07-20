@@ -1,10 +1,12 @@
 package com.hheelo.countdown
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import org.junit.Rule
 import org.junit.Test
 
@@ -41,8 +43,10 @@ class CountdownAppTest {
     @Test
     fun app_displaysSaveButton() {
         composeRule
+            .onNodeWithTag("countdown-list")
+            .performScrollToNode(hasText("保存并刷新小组件"))
+        composeRule
             .onNodeWithText("保存并刷新小组件")
-            .performScrollTo()
             .assertIsDisplayed()
     }
 
@@ -65,8 +69,10 @@ class CountdownAppTest {
     @Test
     fun app_displaysFooter() {
         composeRule
+            .onNodeWithTag("countdown-list")
+            .performScrollToNode(hasText("节假日说明"))
+        composeRule
             .onNodeWithText("节假日说明")
-            .performScrollTo()
             .assertIsDisplayed()
     }
 }

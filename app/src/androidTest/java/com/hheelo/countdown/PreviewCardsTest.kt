@@ -1,8 +1,10 @@
 package com.hheelo.countdown
 
 import android.content.Context
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Rule
@@ -84,7 +86,9 @@ class PreviewCardsTest {
             CountdownTheme { PreviewCards(cards) }
         }
 
-        // Each card displays "天" as the unit label
-        composeRule.onNodeWithText("天", useUnmergedTree = true).assertIsDisplayed()
+        val cardsWithDayUnit = cards.count { it.status != CountdownCardStatus.UNAVAILABLE }
+        composeRule
+            .onAllNodesWithText("天", useUnmergedTree = true)
+            .assertCountEquals(cardsWithDayUnit)
     }
 }

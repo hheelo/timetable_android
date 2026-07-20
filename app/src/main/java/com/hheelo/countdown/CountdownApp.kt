@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -93,6 +94,7 @@ internal fun CountdownApp(
         LazyColumn(
             state = listState,
             modifier = Modifier
+                .testTag("countdown-list")
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
