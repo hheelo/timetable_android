@@ -30,6 +30,7 @@ class CountdownCalculatorTest {
         assertEquals(context.getString(R.string.weekend_title), weekend.title)
         assertEquals(context.getString(R.string.weekend_countdown), weekend.subtitle)
         assertEquals(1, weekend.days)
+        assertEquals(CountdownCardStatus.UPCOMING, weekend.status)
         assertEquals("weekend", weekend.iconName)
         assertEquals(AppDeepLink.HomeUrl, weekend.deepLink)
     }
@@ -40,6 +41,7 @@ class CountdownCalculatorTest {
 
         assertEquals(context.getString(R.string.weekend_today), weekend.subtitle)
         assertEquals(0, weekend.days)
+        assertEquals(CountdownCardStatus.TODAY, weekend.status)
     }
 
     @Test
@@ -49,6 +51,7 @@ class CountdownCalculatorTest {
         assertEquals(context.getString(R.string.holiday_national_day), holiday.title)
         assertEquals(context.getString(R.string.holiday_ongoing), holiday.subtitle)
         assertEquals(0, holiday.days)
+        assertEquals(CountdownCardStatus.ONGOING, holiday.status)
         assertEquals("holiday", holiday.iconName)
         assertEquals(AppDeepLink.HomeUrl, holiday.deepLink)
     }
@@ -107,5 +110,25 @@ class CountdownCalculatorTest {
 
         assertEquals(2, snapshot.cards.size)
         assertEquals(listOf(null, null), snapshot.cards.map { it.eventId })
+    }
+
+    @Test
+    fun previewSnapshotShowsExpiredEventWithElapsedDays() {
+        val snapshot = CountdownCalculator.makePreviewSnapshot(
+            context = context,
+            customEvents = listOf(
+                CountdownEvent(
+                    id = "expired",
+                    title = "已过期",
+                    targetDate = "2026-06-09"
+                )
+            ),
+            now = LocalDate.of(2026, 6, 12)
+        )
+
+        val card = snapshot.cards.first { it.eventId == "expired" }
+        assertEquals(CountdownCardStatus.EXPIRED, card.status)
+        assertEquals(3L, card.days)
+        assertEquals(context.getString(R.string.custom_event_expired), card.subtitle)
     }
 }

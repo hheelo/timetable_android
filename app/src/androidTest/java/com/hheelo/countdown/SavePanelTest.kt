@@ -1,9 +1,12 @@
 package com.hheelo.countdown
 
+import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -12,6 +15,7 @@ class SavePanelTest {
 
     @get:Rule
     val composeRule = createComposeRule()
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Test
     fun savePanel_displaysSaveButton() {
@@ -93,6 +97,24 @@ class SavePanelTest {
     }
 
     @Test
+    fun savePanel_disablesButtonWhileSaving() {
+        composeRule.setContent {
+            CountdownTheme {
+                SavePanel(
+                    savedMessage = null,
+                    tintHex = CountdownColorHex.Brand,
+                    onSave = {},
+                    isSaving = true
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.saving_and_refreshing_widget))
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+    }
+
+    @Test
     fun footer_displaysHolidayNoteTitle() {
         composeRule.setContent {
             CountdownTheme { Footer() }
@@ -107,9 +129,6 @@ class SavePanelTest {
             CountdownTheme { Footer() }
         }
 
-        composeRule.onNodeWithText(
-            "当前内置了 2026 年大陆法定节假日数据；自定义倒计时支持多条配置。后续年份可在 HolidayCalendar.kt 中继续追加。",
-            substring = true
-        ).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.holiday_info_body)).assertIsDisplayed()
     }
 }

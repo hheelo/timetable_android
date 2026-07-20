@@ -17,23 +17,33 @@ class ReminderWorker(
         val store = CountdownStore(applicationContext)
         val events = store.loadCustomEvents()
         val today = LocalDate.now()
+        val requestedEventId = inputData.getString(EVENT_ID_KEY)
+        val candidates = if (requestedEventId == null) {
+            events
+        } else {
+            events.filter { it.id == requestedEventId }
+        }
 
         var notified = 0
-        for (event in events) {
-            if (!event.reminderEnabled) continue
-
+        for (event in candidates) {
             val targetDate = runCatching { LocalDate.parse(event.targetDate) }.getOrNull() ?: continue
-            val reminderDate = targetDate.minusDays(event.reminderDaysBefore.toLong())
+            val reminderDate = ReminderScheduler.reminderDate(event) ?: continue
 
-            if (today == reminderDate) {
+            if (
+                ReminderScheduler.shouldDeliver(event, today) &&
+                !ReminderDeliveryStore.wasDelivered(applicationContext, event.id, reminderDate)
+            ) {
                 val daysRemaining = ChronoUnit.DAYS.between(today, targetDate)
-                NotificationHelper.postReminder(
+                val delivered = NotificationHelper.postReminder(
                     applicationContext,
                     event.id,
                     event.title,
                     daysRemaining
                 )
-                notified++
+                if (delivered) {
+                    ReminderDeliveryStore.markDelivered(applicationContext, event.id, reminderDate)
+                    notified++
+                }
             }
         }
 
@@ -43,6 +53,7 @@ class ReminderWorker(
 
     companion object {
         private const val TAG = "ReminderWorker"
-        const val WORK_NAME = "daily_reminder_check"
+        const val EVENT_ID_KEY = "event_id"
+        const val LEGACY_PERIODIC_WORK_NAME = "daily_reminder_check"
     }
 }

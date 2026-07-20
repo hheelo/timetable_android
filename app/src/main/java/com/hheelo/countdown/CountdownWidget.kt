@@ -58,6 +58,7 @@ class CountdownWidgetReceiver : GlanceAppWidgetReceiver() {
             try {
                 AppLog.i(TAG, "收到广播 ${intent.action}，开始刷新小组件")
                 glanceAppWidget.updateAll(appContext)
+                ReminderScheduler.sync(appContext, CountdownStore(appContext).loadCustomEvents())
             } catch (throwable: Throwable) {
                 AppLog.w(TAG, "刷新小组件失败，action=${intent.action}", throwable)
             } finally {
@@ -133,11 +134,7 @@ private fun SmallWidget(card: CountdownCard, size: DpSize) {
         else -> 32.dp
     }
     val context = LocalContext.current
-    val accessibilityText = if (card.days == 0L) {
-        context.getString(R.string.accessibility_today, card.title)
-    } else {
-        context.getString(R.string.accessibility_days_remaining, card.title, card.days)
-    }
+    val accessibilityText = card.accessibilityText(context)
 
     Column(
         modifier = GlanceModifier
@@ -162,7 +159,7 @@ private fun SmallWidget(card: CountdownCard, size: DpSize) {
         )
         Spacer(GlanceModifier.height(topSpacer))
         Text(
-            text = card.days.toString(),
+            text = card.displayValue(),
             style = TextStyle(color = ColorProvider(Color.White), fontSize = if (compact) 34.sp else 40.sp, fontWeight = FontWeight.Bold)
         )
         Text(
@@ -234,11 +231,7 @@ private fun WidgetCard(
         else -> 0
     }
     val context = LocalContext.current
-    val accessibilityText = if (card.days == 0L) {
-        context.getString(R.string.accessibility_today, card.title)
-    } else {
-        context.getString(R.string.accessibility_days_remaining, card.title, card.days)
-    }
+    val accessibilityText = card.accessibilityText(context)
 
     Column(
         modifier = modifier
@@ -269,7 +262,7 @@ private fun WidgetCard(
             maxLines = titleLines
         )
         Text(
-            text = card.days.toString(),
+            text = card.displayValue(),
             style = TextStyle(color = ColorProvider(Color.White), fontSize = if (compact) 24.sp else 28.sp, fontWeight = FontWeight.Bold)
         )
         if (subtitleLines > 0) {
@@ -333,7 +326,8 @@ private fun overviewPadding(size: DpSize): Dp {
 
 internal fun List<CountdownCard>.sortedForWidget(): List<CountdownCard> {
     return sortedWith(
-        compareBy<CountdownCard> { it.days }
+        compareBy<CountdownCard> { it.status == CountdownCardStatus.UNAVAILABLE }
+            .thenBy { it.days }
             .thenBy { it.widgetDisplayPriority() }
             .thenBy { it.title }
     )

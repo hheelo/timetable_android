@@ -59,7 +59,7 @@ class CountdownStoreTest {
     }
 
     @Test
-    fun unpinnedEventsSortByTargetDateAscending() {
+    fun unpinnedEventsKeepManualOrder() {
         val events = listOf(
             CountdownEvent(id = "far", title = "Far", targetDate = "2026-12-31", isPinned = false),
             CountdownEvent(id = "near", title = "Near", targetDate = "2026-07-01", isPinned = false),
@@ -69,12 +69,12 @@ class CountdownStoreTest {
         store.saveCustomEvents(events)
         val loaded = store.loadCustomEvents()
 
-        assertEquals(listOf("near", "mid", "far"), loaded.map { it.id })
+        assertEquals(listOf("far", "near", "mid"), loaded.map { it.id })
+        assertEquals(listOf(0, 1, 2), loaded.map { it.sortOrder })
     }
 
     @Test
-    fun regressionPinnedSortOrderThenUnpinnedByDate() {
-        // Regression test: pinned events sort by sortOrder, unpinned strictly by date
+    fun pinnedAndUnpinnedGroupsBothKeepManualOrder() {
         val events = listOf(
             CountdownEvent(id = "unpin-late", title = "Late", targetDate = "2026-12-25", isPinned = false),
             CountdownEvent(id = "pin-second", title = "Pin 2", targetDate = "2026-07-04", isPinned = true),
@@ -88,9 +88,10 @@ class CountdownStoreTest {
         // Pinned events come first, in their input (manual) order
         assertEquals("pin-second", loaded[0].id)
         assertEquals("pin-first", loaded[1].id)
-        // Unpinned events follow, sorted by date ascending
-        assertEquals("unpin-early", loaded[2].id)
-        assertEquals("unpin-late", loaded[3].id)
+        // Unpinned events follow in their input (manual) order
+        assertEquals("unpin-late", loaded[2].id)
+        assertEquals("unpin-early", loaded[3].id)
+        assertEquals(listOf(0, 1, 2, 3), loaded.map { it.sortOrder })
     }
 
     // --- Normalization ---
@@ -147,6 +148,23 @@ class CountdownStoreTest {
         val loaded = store.loadCustomEvents()
 
         assertEquals(CountdownColorHex.Brand, loaded[0].colorHex)
+    }
+
+    @Test
+    fun unsupportedReminderDaysFallsBackToOneDay() {
+        val events = listOf(
+            CountdownEvent(
+                id = "1",
+                title = "Reminder",
+                targetDate = "2026-07-01",
+                reminderEnabled = true,
+                reminderDaysBefore = 99
+            )
+        )
+
+        store.saveCustomEvents(events)
+
+        assertEquals(1, store.loadCustomEvents().single().reminderDaysBefore)
     }
 
     // --- Corruption detection ---

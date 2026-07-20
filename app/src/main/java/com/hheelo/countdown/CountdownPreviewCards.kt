@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -63,6 +64,7 @@ internal fun PreviewCards(cards: List<CountdownCard>) {
 @Composable
 private fun CountdownCardRow(card: CountdownCard) {
     val extraColors = LocalCountdownColors.current
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -79,19 +81,17 @@ private fun CountdownCardRow(card: CountdownCard) {
                 Text(card.title, fontWeight = FontWeight.SemiBold, color = extraColors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(card.subtitle, color = extraColors.textSecondary, fontSize = 12.sp)
             }
-            val cardAccessibility = if (card.days == 0L) {
-                stringResource(R.string.accessibility_today, card.title)
-            } else {
-                stringResource(R.string.accessibility_days_remaining, card.title, card.days)
-            }
+            val cardAccessibility = card.accessibilityText(context)
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier.semantics(mergeDescendants = true) {
                     contentDescription = cardAccessibility
                 }
             ) {
-                Text(card.days.toString(), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = extraColors.textPrimary)
-                Text(stringResource(R.string.days_unit), color = extraColors.textSecondary, fontSize = 12.sp)
+                Text(card.displayValue(), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = extraColors.textPrimary)
+                if (card.status != CountdownCardStatus.UNAVAILABLE) {
+                    Text(stringResource(R.string.days_unit), color = extraColors.textSecondary, fontSize = 12.sp)
+                }
             }
         }
     }

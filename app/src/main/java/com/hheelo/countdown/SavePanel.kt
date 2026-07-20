@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -27,19 +30,45 @@ import androidx.compose.ui.unit.sp
 import com.hheelo.countdown.logging.LogExporter
 
 @Composable
-internal fun SavePanel(savedMessage: String?, tintHex: String, onSave: () -> Unit) {
+internal fun SavePanel(
+    savedMessage: String?,
+    tintHex: String,
+    onSave: () -> Unit,
+    isSaving: Boolean = false,
+    messageIsError: Boolean = false,
+    enabled: Boolean = true
+) {
     val extraColors = LocalCountdownColors.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
             onClick = onSave,
+            enabled = enabled && !isSaving,
             colors = ButtonDefaults.buttonColors(containerColor = countdownColor(tintHex)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(Icons.Filled.Save, contentDescription = null)
+            if (isSaving) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Icon(Icons.Filled.Save, contentDescription = null)
+            }
             Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.save_and_refresh_widget))
+            Text(
+                stringResource(
+                    if (isSaving) R.string.saving_and_refreshing_widget else R.string.save_and_refresh_widget
+                )
+            )
         }
-        savedMessage?.let { Text(it, color = extraColors.success, fontSize = 13.sp) }
+        savedMessage?.let {
+            Text(
+                it,
+                color = if (messageIsError) countdownColor(CountdownColorHex.Danger) else extraColors.success,
+                fontSize = 13.sp
+            )
+        }
     }
 }
 

@@ -122,24 +122,27 @@ class CountdownStore(context: Context) {
 
                 val colorHex = sanitizedColorHex(event.colorHex)
                 if (colorHex != event.colorHex) hasInvalidFields = true
+                val reminderDaysBefore = event.reminderDaysBefore
+                    .takeIf { it in SupportedReminderDays }
+                    ?: 1.also { hasInvalidFields = true }
 
                 ValidatedEvent(
                     event = event.copy(
                         title = event.title.trim().ifEmpty { appContext.getString(R.string.unnamed_event) },
                         targetDate = targetDate.toString(),
                         colorHex = colorHex,
-                        sortOrder = index
-                    ),
-                    targetDate = targetDate
+                        sortOrder = index,
+                        reminderDaysBefore = reminderDaysBefore
+                    )
                 )
             }
             .filterNotNull()
             .sortedWith(
                 compareByDescending<ValidatedEvent> { it.event.isPinned }
                     .thenBy { if (it.event.isPinned) it.event.sortOrder else Int.MAX_VALUE }
-                    .thenBy { it.targetDate }
+                    .thenBy { if (!it.event.isPinned) it.event.sortOrder else Int.MAX_VALUE }
             )
-            .map { it.event }
+            .mapIndexed { index, validated -> validated.event.copy(sortOrder = index) }
 
         return NormalizedEvents(normalizedEvents, hasInvalidFields)
     }
@@ -190,8 +193,7 @@ class CountdownStore(context: Context) {
     )
 
     private data class ValidatedEvent(
-        val event: CountdownEvent,
-        val targetDate: LocalDate
+        val event: CountdownEvent
     )
 
     companion object {
@@ -200,5 +202,6 @@ class CountdownStore(context: Context) {
         private const val CorruptEventsBackupKey = "customCountdownEvents.corruptBackup"
         private const val CorruptEventsReasonKey = "customCountdownEvents.corruptReason"
         private const val CorruptEventsBackedUpAtKey = "customCountdownEvents.corruptBackedUpAt"
+        private val SupportedReminderDays = setOf(0, 1, 3, 7)
     }
 }

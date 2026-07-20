@@ -34,12 +34,44 @@ data class CountdownCard(
     val tintHex: String,
     val deepLink: String,
     val eventId: String?,
-    val isPinned: Boolean = false
+    val isPinned: Boolean = false,
+    val status: CountdownCardStatus = CountdownCardStatus.UPCOMING
 )
+
+enum class CountdownCardStatus {
+    UPCOMING,
+    TODAY,
+    ONGOING,
+    EXPIRED,
+    UNAVAILABLE
+}
+
+fun CountdownCard.displayValue(): String {
+    return if (status == CountdownCardStatus.UNAVAILABLE) "--" else days.toString()
+}
+
+fun CountdownCard.accessibilityText(context: Context): String {
+    return when (status) {
+        CountdownCardStatus.TODAY -> context.getString(R.string.accessibility_today, title)
+        CountdownCardStatus.ONGOING -> context.getString(R.string.accessibility_ongoing, title)
+        CountdownCardStatus.EXPIRED -> context.getString(R.string.accessibility_days_elapsed, title, days)
+        CountdownCardStatus.UNAVAILABLE -> context.getString(R.string.accessibility_unavailable, title, subtitle)
+        CountdownCardStatus.UPCOMING -> context.getString(R.string.accessibility_days_remaining, title, days)
+    }
+}
 
 data class CountdownSnapshot(
     val generatedAt: LocalDate,
     val cards: List<CountdownCard>
+)
+
+data class CountdownUiState(
+    val events: List<CountdownEvent>,
+    val snapshot: CountdownSnapshot,
+    val isLoading: Boolean,
+    val isSaving: Boolean,
+    val statusMessage: String?,
+    val statusMessageIsError: Boolean
 )
 
 object AppDeepLink {

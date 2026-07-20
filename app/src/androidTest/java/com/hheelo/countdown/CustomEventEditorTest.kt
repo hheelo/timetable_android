@@ -1,5 +1,6 @@
 package com.hheelo.countdown
 
+import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -9,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -19,6 +21,7 @@ class CustomEventEditorTest {
 
     @get:Rule
     val composeRule = createComposeRule()
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     private fun defaultEvent(
         title: String = "新的目标",
@@ -52,9 +55,7 @@ class CustomEventEditorTest {
             }
         }
 
-        composeRule.onNodeWithText(
-            "支持配置多个重要日期，小组件会优先展示最近日期；点桌面小组件可直达对应条目。"
-        ).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.editor_description)).assertIsDisplayed()
     }
 
     @Test
@@ -317,8 +318,35 @@ class CustomEventEditorTest {
             CountdownTheme { EmptyState() }
         }
 
-        composeRule.onNodeWithText(
-            "还没有自定义事件，点右上角“新增”来添加你的第一个倒计时。"
-        ).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.empty_state_hint)).assertIsDisplayed()
+    }
+
+    @Test
+    fun reminderWithoutPermission_showsSettingsAction() {
+        val event = defaultEvent().copy(reminderEnabled = true)
+        var openedSettings = false
+
+        composeRule.setContent {
+            CountdownTheme {
+                CustomEventEditor(
+                    event = event,
+                    highlighted = false,
+                    canMoveUp = false,
+                    canMoveDown = false,
+                    onChange = {},
+                    onDelete = {},
+                    onMoveUp = {},
+                    onMoveDown = {},
+                    notificationsGranted = false,
+                    onOpenNotificationSettings = { openedSettings = true }
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.notification_permission_required))
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.open_notification_settings))
+            .performClick()
+        assertTrue(openedSettings)
     }
 }

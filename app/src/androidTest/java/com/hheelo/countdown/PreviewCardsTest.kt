@@ -1,8 +1,10 @@
 package com.hheelo.countdown
 
+import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
@@ -11,6 +13,7 @@ class PreviewCardsTest {
 
     @get:Rule
     val composeRule = createComposeRule()
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Test
     fun header_displaysTitle() {
@@ -34,7 +37,7 @@ class PreviewCardsTest {
 
     @Test
     fun previewCards_displaysWeekendCard() {
-        val cards = CountdownCalculator.makeDefaultCards()
+        val cards = CountdownCalculator.makeDefaultCards(context)
 
         composeRule.setContent {
             CountdownTheme { PreviewCards(cards) }
@@ -45,7 +48,7 @@ class PreviewCardsTest {
 
     @Test
     fun previewCards_displaysHolidayCard() {
-        val cards = CountdownCalculator.makeDefaultCards()
+        val cards = CountdownCalculator.makeDefaultCards(context)
 
         composeRule.setContent {
             CountdownTheme { PreviewCards(cards) }
@@ -64,7 +67,7 @@ class PreviewCardsTest {
             title = "期末考试",
             targetDate = now.plusDays(30).toString()
         )
-        val cards = CountdownCalculator.makePreviewSnapshot(listOf(customEvent), now).cards
+        val cards = CountdownCalculator.makePreviewSnapshot(context, listOf(customEvent), now).cards
 
         composeRule.setContent {
             CountdownTheme { PreviewCards(cards) }
@@ -75,7 +78,7 @@ class PreviewCardsTest {
 
     @Test
     fun previewCards_displaysDayCount() {
-        val cards = CountdownCalculator.makeDefaultCards()
+        val cards = CountdownCalculator.makeDefaultCards(context)
 
         composeRule.setContent {
             CountdownTheme { PreviewCards(cards) }

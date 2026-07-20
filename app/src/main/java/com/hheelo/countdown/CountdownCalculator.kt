@@ -56,8 +56,11 @@ object CountdownCalculator {
         includeExpiredCustomEvents: Boolean
     ): CountdownSnapshot {
         val customCards = customEvents
-            .filter { includeExpiredCustomEvents || !targetDateFor(it).isBefore(now) }
-            .map { makeCustomCard(context, it, now) }
+            .mapNotNull { event ->
+                val target = targetDateFor(event) ?: return@mapNotNull null
+                if (!includeExpiredCustomEvents && target.isBefore(now)) return@mapNotNull null
+                makeCustomCard(context, event, target, now)
+            }
         return CountdownSnapshot(
             generatedAt = now,
             cards = makeDefaultCards(context, now) + customCards
@@ -82,7 +85,8 @@ object CountdownCalculator {
             iconName = "weekend",
             tintHex = CountdownColorHex.Weekend,
             deepLink = AppDeepLink.HomeUrl,
-            eventId = null
+            eventId = null,
+            status = if (days == 0L) CountdownCardStatus.TODAY else CountdownCardStatus.UPCOMING
         )
     }
 
@@ -98,7 +102,12 @@ object CountdownCalculator {
                 iconName = "holiday",
                 tintHex = CountdownColorHex.Holiday,
                 deepLink = AppDeepLink.HomeUrl,
-                eventId = null
+                eventId = null,
+                status = if (now.isBefore(holiday.start)) {
+                    CountdownCardStatus.UPCOMING
+                } else {
+                    CountdownCardStatus.ONGOING
+                }
             )
         }
 
@@ -114,28 +123,44 @@ object CountdownCalculator {
             iconName = "holiday",
             tintHex = CountdownColorHex.Holiday,
             deepLink = AppDeepLink.HomeUrl,
-            eventId = null
+            eventId = null,
+            status = CountdownCardStatus.UNAVAILABLE
         )
     }
 
-    private fun makeCustomCard(context: Context, event: CountdownEvent, now: LocalDate): CountdownCard {
-        val target = targetDateFor(event)
-        val days = daysBetween(now, target).coerceAtLeast(0)
+    private fun makeCustomCard(
+        context: Context,
+        event: CountdownEvent,
+        target: LocalDate,
+        now: LocalDate
+    ): CountdownCard {
+        val signedDays = daysBetween(now, target)
+        val status = when {
+            signedDays < 0 -> CountdownCardStatus.EXPIRED
+            signedDays == 0L -> CountdownCardStatus.TODAY
+            else -> CountdownCardStatus.UPCOMING
+        }
+        val days = kotlin.math.abs(signedDays)
         val title = event.title.trim().ifEmpty { context.getString(R.string.unnamed_event) }
         return CountdownCard(
             title = if (event.isPinned) context.getString(R.string.pinned_prefix, title) else title,
-            subtitle = if (days == 0L) context.getString(R.string.custom_event_today) else context.getString(R.string.custom_event_countdown),
+            subtitle = when (status) {
+                CountdownCardStatus.EXPIRED -> context.getString(R.string.custom_event_expired)
+                CountdownCardStatus.TODAY -> context.getString(R.string.custom_event_today)
+                else -> context.getString(R.string.custom_event_countdown)
+            },
             days = days,
             iconName = if (event.isPinned) "pin" else "calendar",
             tintHex = event.colorHex,
             deepLink = AppDeepLink.eventUrl(event.id),
             eventId = event.id,
-            isPinned = event.isPinned
+            isPinned = event.isPinned,
+            status = status
         )
     }
 
-    private fun targetDateFor(event: CountdownEvent): LocalDate {
-        return runCatching { LocalDate.parse(event.targetDate) }.getOrDefault(LocalDate.now())
+    private fun targetDateFor(event: CountdownEvent): LocalDate? {
+        return runCatching { LocalDate.parse(event.targetDate) }.getOrNull()
     }
 
     private fun nextWeekendStart(now: LocalDate): LocalDate {

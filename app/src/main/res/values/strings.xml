@@ -11,11 +11,14 @@
     <string name="days_unit">天</string>
     <string name="accessibility_today">%1$s，就是今天</string>
     <string name="accessibility_days_remaining">%1$s，还有 %2$d 天</string>
+    <string name="accessibility_days_elapsed">%1$s，已经过去 %2$d 天</string>
+    <string name="accessibility_ongoing">%1$s，正在进行中</string>
+    <string name="accessibility_unavailable">%1$s，%2$s</string>
 
     <!-- Custom editor -->
     <string name="custom_countdown_title">自定义倒计时</string>
     <string name="add_button">新增</string>
-    <string name="editor_description">支持配置多个重要日期，小组件会优先展示最近日期；点桌面小组件可直达对应条目。</string>
+    <string name="editor_description">置顶事件优先，组内可手动排序；小组件会优先展示最近日期，点击可直达对应条目。</string>
     <string name="event_name_label">事件名称</string>
     <string name="pin_to_top">置顶显示</string>
     <string name="move_up">上移</string>
@@ -30,6 +33,8 @@
 
     <!-- Save panel -->
     <string name="save_and_refresh_widget">保存并刷新小组件</string>
+    <string name="saving_and_refreshing_widget">正在保存并刷新</string>
+    <string name="loading_events">正在加载倒计时…</string>
 
     <!-- Footer -->
     <string name="holiday_info_title">节假日说明</string>
@@ -42,6 +47,7 @@
     <!-- ViewModel messages -->
     <string name="save_success_message">已保存并刷新桌面小组件</string>
     <string name="save_failure_message">保存失败，请重试</string>
+    <string name="load_failure_message">加载失败，请重启应用后重试</string>
 
     <!-- Default / fallback event names -->
     <string name="new_goal">新的目标</string>
@@ -64,6 +70,7 @@
     <string name="pinned_prefix">置顶 · %1$s</string>
     <string name="custom_event_today">今天就是目标日</string>
     <string name="custom_event_countdown">你的自定义倒计时</string>
+    <string name="custom_event_expired">目标日已经过去</string>
 
     <!-- Reminder -->
     <string name="reminder_label">提醒</string>
@@ -75,6 +82,8 @@
     <string name="reminder_notification_channel">事件提醒</string>
     <string name="reminder_notification_text">「%1$s」还有%2$d天</string>
     <string name="reminder_notification_today">「%1$s」就是今天！</string>
+    <string name="notification_permission_required">通知权限未开启，系统不会显示这个提醒。</string>
+    <string name="open_notification_settings">打开通知设置</string>
 
     <!-- Holiday names -->
     <string name="holiday_new_year">元旦</string>

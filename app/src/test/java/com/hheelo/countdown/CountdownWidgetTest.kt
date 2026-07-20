@@ -39,6 +39,18 @@ class CountdownWidgetTest {
         assertEquals(listOf("置顶自定义", "自定义", "周末"), sorted.map { it.title })
     }
 
+    @Test
+    fun sortedForWidgetPlacesUnavailableCardsLast() {
+        val unavailable = card(title = "暂无节假日", days = 0, eventId = null).copy(
+            status = CountdownCardStatus.UNAVAILABLE
+        )
+        val future = card(title = "未来事件", days = 30, eventId = "future")
+
+        val sorted = listOf(unavailable, future).sortedForWidget()
+
+        assertEquals(listOf("未来事件", "暂无节假日"), sorted.map { it.title })
+    }
+
     private fun card(
         title: String,
         days: Long,
