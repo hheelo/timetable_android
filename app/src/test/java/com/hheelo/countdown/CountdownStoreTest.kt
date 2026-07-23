@@ -305,6 +305,17 @@ class CountdownStoreTest {
     }
 
     @Test
+    fun defaultEventsArePersistedAndStableAcrossStoreInstances() {
+        val firstLoad = store.loadCustomEvents()
+        val preferences = context.getSharedPreferences("countdown_store", Context.MODE_PRIVATE)
+
+        assertTrue(preferences.contains("customCountdownEvents"))
+
+        val secondLoad = CountdownStore(context).loadCustomEvents()
+        assertEquals(firstLoad, secondLoad)
+    }
+
+    @Test
     fun savedEmptyListDoesNotRestoreDefaultEvent() {
         val defaultEvents = store.loadCustomEvents()
         assertEquals(1, defaultEvents.size)

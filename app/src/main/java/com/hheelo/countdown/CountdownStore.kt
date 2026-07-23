@@ -17,6 +17,8 @@ import java.time.LocalDate
  * 设计约定，避免被误当成可优化的冗余：
  * - 本类每次按需新建（ViewModel 初始化一次、小组件每次 provideGlance 一次），
  *   实例不复用，因此「加内存缓存省去重复 load」在当前架构下没有收益。
+ * - 首次读取时会在进程内串行创建并持久化默认事件，确保 App、小组件和提醒系统
+ *   后续读取到相同的事件 ID 与目标日期。
  * - [saveCustomEvents] 与 [loadCustomEvents] 各调用一次 [normalized]，职责不同、并非重复：
  *   写入侧负责落盘前清洗（trim、补默认色、重排 sortOrder)；
  *   读取侧负责防御外部篡改 / 旧版本数据,并据此触发损坏备份。
@@ -29,8 +31,7 @@ class CountdownStore(context: Context) {
 
     fun loadCustomEvents(): List<CountdownEvent> {
         if (!preferences.contains(CustomEventsKey)) {
-            AppLog.i(TAG, "无已存事件，返回默认事件")
-            return defaultCustomEvents()
+            return initializeDefaultEvents()
         }
 
         val encoded = runCatching { preferences.getString(CustomEventsKey, null) }
@@ -60,10 +61,7 @@ class CountdownStore(context: Context) {
 
     fun saveCustomEvents(events: List<CountdownEvent>) {
         runCatching {
-            val saved = preferences.edit()
-                .putString(CustomEventsKey, json.encodeToString(normalized(events).events))
-                .commit()
-            check(saved) { "SharedPreferences commit returned false" }
+            persistCustomEvents(events)
         }.onSuccess {
             AppLog.i(TAG, "已保存 ${events.size} 个事件")
         }.onFailure {
@@ -72,10 +70,31 @@ class CountdownStore(context: Context) {
         }
     }
 
+    private fun initializeDefaultEvents(): List<CountdownEvent> {
+        return synchronized(DefaultInitializationLock) {
+            if (preferences.contains(CustomEventsKey)) {
+                return@synchronized loadCustomEvents()
+            }
+
+            val defaults = defaultCustomEvents()
+            persistCustomEvents(defaults)
+            AppLog.i(TAG, "无已存事件，已初始化并持久化默认事件")
+            defaults
+        }
+    }
+
+    private fun persistCustomEvents(events: List<CountdownEvent>) {
+        val saved = preferences.edit()
+            .putString(CustomEventsKey, json.encodeToString(normalized(events).events))
+            .commit()
+        check(saved) { "SharedPreferences commit returned false" }
+    }
+
     private fun defaultCustomEvents(): List<CountdownEvent> {
         return normalized(
             listOf(
                 CountdownEvent(
+                    id = DefaultEventId,
                     title = appContext.getString(R.string.default_event_title),
                     targetDate = LocalDate.now().plusDays(30).toString(),
                     colorHex = CountdownColorHex.Brand
@@ -202,6 +221,8 @@ class CountdownStore(context: Context) {
         private const val CorruptEventsBackupKey = "customCountdownEvents.corruptBackup"
         private const val CorruptEventsReasonKey = "customCountdownEvents.corruptReason"
         private const val CorruptEventsBackedUpAtKey = "customCountdownEvents.corruptBackedUpAt"
+        private const val DefaultEventId = "default-product-launch"
+        private val DefaultInitializationLock = Any()
         private val SupportedReminderDays = setOf(0, 1, 3, 7)
     }
 }
