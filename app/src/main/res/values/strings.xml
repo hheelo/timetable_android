@@ -45,8 +45,11 @@
     <string name="log_share_subject">Countdown 日志</string>
 
     <!-- ViewModel messages -->
-    <string name="save_success_message">已保存并刷新桌面小组件</string>
+    <string name="save_success_message">已保存，并完成提醒与桌面小组件同步</string>
     <string name="save_failure_message">保存失败，请重试</string>
+    <string name="save_reminder_sync_failure_message">数据已保存，但提醒同步失败，请重试</string>
+    <string name="save_widget_refresh_failure_message">数据已保存，但桌面小组件刷新失败，请重试</string>
+    <string name="save_reminder_and_widget_failure_message">数据已保存，但提醒和桌面小组件同步失败，请重试</string>
     <string name="load_failure_message">加载失败，请重启应用后重试</string>
 
     <!-- Default / fallback event names -->

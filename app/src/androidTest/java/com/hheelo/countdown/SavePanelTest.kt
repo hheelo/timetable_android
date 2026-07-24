@@ -55,14 +55,14 @@ class SavePanelTest {
         composeRule.setContent {
             CountdownTheme {
                 SavePanel(
-                    savedMessage = "已保存并刷新桌面小组件",
+                    savedMessage = context.getString(R.string.save_success_message),
                     tintHex = CountdownColorHex.Brand,
                     onSave = {}
                 )
             }
         }
 
-        composeRule.onNodeWithText("已保存并刷新桌面小组件").assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.save_success_message)).assertIsDisplayed()
     }
 
     @Test
@@ -92,7 +92,7 @@ class SavePanelTest {
             }
         }
 
-        composeRule.onNodeWithText("已保存并刷新桌面小组件").assertDoesNotExist()
+        composeRule.onNodeWithText(context.getString(R.string.save_success_message)).assertDoesNotExist()
         composeRule.onNodeWithText("保存失败，请重试").assertDoesNotExist()
     }
 

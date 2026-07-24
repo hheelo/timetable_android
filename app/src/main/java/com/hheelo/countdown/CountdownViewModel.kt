@@ -104,30 +104,30 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
             it.copy(isSaving = true, statusMessage = null, statusMessageIsError = false)
         }
         viewModelScope.launch {
-            runCatching {
-                withContext(Dispatchers.IO) {
-                    store.saveCustomEvents(current)
-                    ReminderScheduler.sync(ctx, current)
-                    CountdownWidget().updateAll(getApplication())
+            val result = executeCountdownSave(
+                persistEvents = {
+                    withContext(Dispatchers.IO) {
+                        store.saveCustomEvents(current)
+                    }
+                },
+                syncReminders = {
+                    withContext(Dispatchers.IO) {
+                        ReminderScheduler.sync(ctx, current)
+                    }
+                },
+                refreshWidget = {
+                    withContext(Dispatchers.IO) {
+                        CountdownWidget().updateAll(getApplication())
+                    }
                 }
-            }.onSuccess {
-                AppLog.i(TAG, "保存并刷新小组件完成，共 ${current.size} 个事件")
-                _uiState.update {
-                    it.copy(
-                        isSaving = false,
-                        statusMessage = getApplication<Application>().getString(R.string.save_success_message),
-                        statusMessageIsError = false
-                    )
-                }
-            }.onFailure {
-                AppLog.e(TAG, "保存或刷新小组件失败", it)
-                _uiState.update {
-                    it.copy(
-                        isSaving = false,
-                        statusMessage = getApplication<Application>().getString(R.string.save_failure_message),
-                        statusMessageIsError = true
-                    )
-                }
+            )
+            logSaveResult(result, current.size)
+            _uiState.update {
+                it.copy(
+                    isSaving = false,
+                    statusMessage = getApplication<Application>().getString(result.statusMessageRes()),
+                    statusMessageIsError = !result.fullySynchronized
+                )
             }
         }
     }
@@ -162,6 +162,22 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun canEdit(): Boolean {
         return !_uiState.value.isLoading && !_uiState.value.isSaving
+    }
+
+    private fun logSaveResult(result: CountdownSaveResult, eventCount: Int) {
+        result.persistenceError?.let {
+            AppLog.e(TAG, "保存事件失败", it)
+            return
+        }
+        result.reminderSyncError?.let {
+            AppLog.w(TAG, "事件已保存，但同步提醒失败", it)
+        }
+        result.widgetRefreshError?.let {
+            AppLog.w(TAG, "事件已保存，但刷新小组件失败", it)
+        }
+        if (result.fullySynchronized) {
+            AppLog.i(TAG, "保存、提醒同步和小组件刷新完成，共 $eventCount 个事件")
+        }
     }
 
     private fun List<CountdownEvent>.groupedByPin(): List<CountdownEvent> {
