@@ -98,20 +98,41 @@ internal object ReminderDeliveryStore {
     private const val PREFERENCES_NAME = "reminder_delivery"
     private const val DELIVERED_KEYS = "delivered_keys"
 
+    /**
+     * 已投递记录的保留天数。
+     *
+     * [ReminderScheduler.sync] 只会为 targetDate 不早于今天的事件排期，而提醒日期最多
+     * 比 targetDate 早 7 天，所以任何早于「今天 - 7 天」的记录都不可能再被查询到。
+     * 这里取一个宽裕得多的窗口，超出窗口的记录直接丢弃，避免 StringSet 无限增长。
+     */
+    internal const val RETENTION_DAYS = 90L
+
     @Synchronized
     fun wasDelivered(context: Context, eventId: String, reminderDate: LocalDate): Boolean {
         return deliveryKey(eventId, reminderDate) in deliveredKeys(context)
     }
 
     @Synchronized
-    fun markDelivered(context: Context, eventId: String, reminderDate: LocalDate) {
-        val updated = deliveredKeys(context).toMutableSet().apply {
-            add(deliveryKey(eventId, reminderDate))
-        }
+    fun markDelivered(
+        context: Context,
+        eventId: String,
+        reminderDate: LocalDate,
+        today: LocalDate = LocalDate.now()
+    ) {
+        val updated = deliveredKeys(context) + deliveryKey(eventId, reminderDate)
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
             .edit()
-            .putStringSet(DELIVERED_KEYS, updated)
+            .putStringSet(DELIVERED_KEYS, pruned(updated, today))
             .apply()
+    }
+
+    /** 丢弃超出保留窗口的记录，以及日期无法解析的脏数据。 */
+    internal fun pruned(keys: Set<String>, today: LocalDate): Set<String> {
+        val earliest = today.minusDays(RETENTION_DAYS)
+        return keys.filterTo(mutableSetOf()) { key ->
+            val date = runCatching { LocalDate.parse(key.substringAfterLast('|')) }.getOrNull()
+            date != null && !date.isBefore(earliest)
+        }
     }
 
     private fun deliveredKeys(context: Context): Set<String> {

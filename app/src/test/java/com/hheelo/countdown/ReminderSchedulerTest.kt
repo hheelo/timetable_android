@@ -1,5 +1,6 @@
 package com.hheelo.countdown
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -38,5 +39,37 @@ class ReminderSchedulerTest {
                 LocalDate.of(2026, 7, 7)
             )
         )
+    }
+
+    @Test
+    fun keepsDeliveryRecordsInsideRetentionWindow() {
+        val today = LocalDate.of(2026, 7, 10)
+        val keys = setOf(
+            "event|2026-07-10",
+            "event|${today.minusDays(ReminderDeliveryStore.RETENTION_DAYS)}"
+        )
+        assertEquals(keys, ReminderDeliveryStore.pruned(keys, today))
+    }
+
+    @Test
+    fun dropsDeliveryRecordsOutsideRetentionWindow() {
+        val today = LocalDate.of(2026, 7, 10)
+        val stale = "event|${today.minusDays(ReminderDeliveryStore.RETENTION_DAYS + 1)}"
+        val fresh = "event|2026-07-09"
+        assertEquals(setOf(fresh), ReminderDeliveryStore.pruned(setOf(stale, fresh), today))
+    }
+
+    @Test
+    fun dropsDeliveryRecordsWithUnparsableDate() {
+        val today = LocalDate.of(2026, 7, 10)
+        val keys = setOf("event|not-a-date", "event", "event|2026-07-09")
+        assertEquals(setOf("event|2026-07-09"), ReminderDeliveryStore.pruned(keys, today))
+    }
+
+    @Test
+    fun keepsDeliveryRecordsWhenEventIdContainsSeparator() {
+        val today = LocalDate.of(2026, 7, 10)
+        val keys = setOf("odd|id|2026-07-09")
+        assertEquals(keys, ReminderDeliveryStore.pruned(keys, today))
     }
 }

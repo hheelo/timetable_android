@@ -68,7 +68,7 @@ object NotificationHelper {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(context.getString(R.string.reminder_notification_title))
             .setContentText(text)
             .setContentIntent(contentIntent)

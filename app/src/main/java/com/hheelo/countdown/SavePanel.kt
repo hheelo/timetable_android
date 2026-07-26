@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +29,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hheelo.countdown.logging.LogExporter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 internal fun SavePanel(
@@ -76,6 +80,7 @@ internal fun SavePanel(
 internal fun Footer() {
     val context = LocalContext.current
     val extraColors = LocalCountdownColors.current
+    val scope = rememberCoroutineScope()
     val versionName = remember {
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
@@ -95,11 +100,14 @@ internal fun Footer() {
                 fontSize = 12.sp,
                 modifier = Modifier.pointerInput(Unit) {
                     detectTapGestures(onLongPress = {
-                        val intent = LogExporter.shareIntent(context)
-                        if (intent != null) {
-                            context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_log)))
-                        } else {
-                            Toast.makeText(context, context.getString(R.string.no_log_to_export), Toast.LENGTH_SHORT).show()
+                        // 导出会读取整个日志文件并落盘，放到 IO 线程避免卡住主线程。
+                        scope.launch {
+                            val intent = withContext(Dispatchers.IO) { LogExporter.shareIntent(context) }
+                            if (intent != null) {
+                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_log)))
+                            } else {
+                                Toast.makeText(context, context.getString(R.string.no_log_to_export), Toast.LENGTH_SHORT).show()
+                            }
                         }
                     })
                 }

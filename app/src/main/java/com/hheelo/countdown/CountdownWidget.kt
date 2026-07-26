@@ -280,7 +280,7 @@ private fun WidgetCard(
 
 private fun deepLinkIntent(url: String): Intent {
     return Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-        setPackage("com.hheelo.countdown")
+        setPackage(BuildConfig.APPLICATION_ID)
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
     }
 }
