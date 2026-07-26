@@ -81,6 +81,10 @@ internal fun Footer() {
     val context = LocalContext.current
     val extraColors = LocalCountdownColors.current
     val scope = rememberCoroutineScope()
+    // 在 composable 作用域内取字符串：Context.getString 不会随 Configuration 变化而重组，
+    // 手势回调里直接用 context.getString 会拿到过期的本地化文案。
+    val shareLogTitle = stringResource(R.string.share_log)
+    val noLogMessage = stringResource(R.string.no_log_to_export)
     val versionName = remember {
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
@@ -104,9 +108,9 @@ internal fun Footer() {
                         scope.launch {
                             val intent = withContext(Dispatchers.IO) { LogExporter.shareIntent(context) }
                             if (intent != null) {
-                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_log)))
+                                context.startActivity(Intent.createChooser(intent, shareLogTitle))
                             } else {
-                                Toast.makeText(context, context.getString(R.string.no_log_to_export), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, noLogMessage, Toast.LENGTH_SHORT).show()
                             }
                         }
                     })

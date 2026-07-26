@@ -18,8 +18,8 @@
 
 ## 环境要求
 
-- JDK 17
-- Android SDK（compileSdk 35）
+- JDK 21（Robolectric 在 Android SDK 36 及以上的沙箱需要 Java 21，JDK 17 会导致单元测试失败）
+- Android SDK（compileSdk 37，targetSdk 36）
 - 最低支持 Android 8.0（minSdk 26）
 
 ## 打开方式
@@ -34,7 +34,7 @@ open timetable_android
 
 ## 构建
 
-在配置好 JDK 17 和 Android SDK 的环境中执行：
+在配置好 JDK 21 和 Android SDK 的环境中执行：
 
 ```bash
 ./gradlew assembleDebug
